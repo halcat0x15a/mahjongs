@@ -1,6 +1,6 @@
 package mahjongs
 
-sealed trait Hand {
+sealed trait Hand { self =>
   def value: Value
   def apply(melds: Seq[Meld], wait: Wait): Boolean
 }
@@ -134,4 +134,23 @@ case object FullFlush extends Hand {
           case _ => false
         }
     }
+}
+
+object Hand {
+  def values =
+    List(
+      List(AllSimples),
+      List(AllRuns),
+      List(SevenPairs, DoubleRun),
+      List(TwoDoubleRuns),
+      List(AllTriplets),
+      List(Straight),
+      List(ThreeTriplets),
+      List(ThreeQuads),
+      List(ThreeColor),
+      List(LittleDragons),
+      List(TerminalsAndHonors),
+      List(PureOutside, MixedOutside),
+      List(FullFlush, HalfFlush)
+    )
 }
