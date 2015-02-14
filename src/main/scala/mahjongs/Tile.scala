@@ -28,7 +28,9 @@ object Tile {
     }
 }
 
-sealed trait Suit
+sealed trait Suit {
+  def apply(value: Int): Number = Number(this, value)
+}
 
 case object Character extends Suit
 
