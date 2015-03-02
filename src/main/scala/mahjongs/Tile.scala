@@ -10,7 +10,7 @@ sealed trait Tile {
 }
 
 object Tile {
-  def indexOf(tile: Tile) =
+  def indexOf(tile: Tile): Int =
     tile match {
       case _: Number => 0
       case _: Wind => 1
@@ -39,7 +39,7 @@ case object Circle extends Suit
 case object Bamboo extends Suit
 
 object Suit extends Enum[Suit] {
-  def values = Seq(Character, Circle, Bamboo)
+  def values = Vector(Character, Circle, Bamboo)
 }
 
 case class Number(suit: Suit, value: Int) extends Tile
@@ -60,17 +60,17 @@ case object West extends Wind
 case object North extends Wind
 
 object Wind extends Enum[Wind] {
-  def values = Seq(East, South, West, North)
+  def values = Vector(East, South, West, North)
 }
 
 sealed trait Dragon extends Tile
 
-case object Red extends Dragon
+case object White extends Dragon
 
 case object Green extends Dragon
 
-case object White extends Dragon
+case object Red extends Dragon
 
 object Dragon extends Enum[Dragon] {
-  def values = Seq(Red, Green, White)
+  def values = Vector(White, Green, Red)
 }
