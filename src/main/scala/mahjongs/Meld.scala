@@ -52,7 +52,7 @@ object Meld {
     def size = 4
   }
   case class Seq(suit: Suit, start: Int) extends Meld {
-    def tiles = start to start + 3 map suit.apply
+    def tiles = start until start + 3 map suit.apply
   }
   object Set {
     def apply(tile: Tile, size: Int): Set =

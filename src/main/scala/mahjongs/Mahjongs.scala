@@ -1,26 +1,25 @@
 package mahjongs
 
-import scala.util.parsing.combinator.Parsers
-import scala.util.parsing.input.{Reader, NoPosition}
+case class Hand(tile: Tile, concealed: Seq[Tile], quads: Seq[Meld.Quad], melded: Seq[Meld])
 
-object Mahjongs extends Parsers {
-  case class Result(winning: Winning, han: Int, fu: Int, hands: Seq[Hand], melds: Seq[Meld])
+object Mahjongs {
+  case class Result(winning: Winning, han: Int, fu: Int, combinations: Seq[Combination], melds: Seq[Meld])
   type Elem = Tile
   def ceil(value: Double, n: Int): Double = math.ceil(value / n) * n
-  def apply(tile: Tile, concealed: Seq[Tile], quads: Seq[Meld.Quad], melded: Seq[Meld], selfpick: Boolean, dealer: Boolean, prevailing: Wind, player: Wind, addition: Int) = {
-    val tiles = ((tile -> true) +: concealed.map(_ -> false)).sorted
+  def apply(hand: Hand, selfpick: Boolean, dealer: Boolean, prevailing: Wind, player: Wind, addition: Int) = {
+    val tiles = ((hand.tile -> true) +: hand.concealed.map(_ -> false)).sorted
     val scores = for {
-      melds <- parse(tiles.map(_._1))
-      if melds.size + quads.size + melded.size == 5
+      melds <- combinations(tiles.map(_._1))
+      if melds.size + hand.quads.size + hand.melded.size == 5
       wait <- Wait.find(tiles.takeWhile(_._2).size, melds).toSeq
     } yield {
-      val hands = Hand.values(prevailing, player).map(hands => hands.find(_.check(melds ++ quads, melded))).flatten.filter(Hand.check(selfpick, wait))
-      val han = hands.map(hand => if (hand.decrease && melded.nonEmpty) hand.value - 1 else hand.value).sum + addition
+      val combinations = Combination.values(prevailing, player).map(combinations => combinations.find(_.check(melds ++ hand.quads, hand.melded))).flatten.filter(Combination.check(selfpick, wait))
+      val han = combinations.map(combination => if (combination.decrease && hand.melded.nonEmpty) combination.value - 1 else combination.value).sum + addition
       val fu =
-        if (selfpick && hands.contains(Hand.AllSeqs)) 20
-        else if (hands.contains(Hand.SevenPairs)) 25
-        else if (Hand.AllSeqs.check(melds ++ quads, melded) && wait == Wait.Sides) 30
-        else ceil((20 + (if (melded.isEmpty) (if (selfpick) 2 else 10) else 0) + wait.fu + (melds ++ quads).map(_.fu).sum + melded.map(_.fu / 2).sum).toDouble, 10).toInt
+        if (selfpick && combinations.contains(Combination.AllSeqs)) 20
+        else if (combinations.contains(Combination.SevenPairs)) 25
+        else if (Combination.AllSeqs.check(melds ++ hand.quads, hand.melded) && wait == Wait.Sides) 30
+        else ceil((20 + (if (hand.melded.isEmpty) (if (selfpick) 2 else 10) else 0) + wait.fu + (melds ++ hand.quads).map(_.fu).sum + hand.melded.map(_.fu / 2).sum).toDouble, 10).toInt
       val base =
         if (han >= 13) 8000
         else if (han >= 11) 6000
@@ -40,47 +39,23 @@ object Mahjongs extends Parsers {
           else
             Discard(ceil(base * 4, 100).toInt)
         }
-      Result(winning, han, fu, hands, melds ++ quads ++ melded)
+      Result(winning, han, fu, combinations, melds ++ hand.quads ++ hand.melded)
     }
     if (scores.nonEmpty)
       Some(scores.maxBy(_.winning.value))
     else
       None
   }
-  def parse(tiles: Seq[Tile]) = hand(reader(tiles)).getOrElse(Nil)
-  def reader(tiles: Seq[Tile]): Reader[Tile] =
-    new Reader[Tile] {
-      def first = tiles.head
-      def rest = reader(tiles.tail)
-      def atEnd = tiles.isEmpty
-      def pos = NoPosition
+  def combinations(tiles: Seq[Tile]): List[List[Meld]] =
+    tiles match {
+      case tile +: tiles =>
+        lazy val seq: List[List[Meld]] = tile match {
+          case Number(suit, value) if tiles.contains(suit(value + 1)) && tiles.contains(suit(value + 2)) =>
+            combinations(tiles diff List(suit(value + 1), suit(value + 2))).map(Meld.Seq(suit, value) :: _)
+          case _ => Nil
+        }
+        lazy val sets = (0 until tiles.count(_ == tile)).flatMap(i => combinations(tiles diff List.fill(i + 1)(tile)).map(Meld.Set(tile, i + 2) :: _))
+        seq ++ sets
+      case _ => List(Nil)
     }
-  def tile: Parser[Tile] =
-    Parser { input =>
-      if (input.atEnd)
-        Failure("end of input", input)
-      else
-        Success(input.first, input.rest)
-    }
-  def number: Parser[Number] =
-    tile ^? {
-      case number: Number => number
-    }
-  def set(n: Int): Parser[Seq[Seq[Meld.Set]]] =
-    for {
-      tiles@(tile :: _) <- repN(n, tile)
-      if tiles.distinct.size == 1
-    } yield List(List(Meld.Set(tile, n)))
-  def complex(n: Int): Parser[Seq[Seq[Meld]]] =
-    for {
-      numbers@(Number(suit, value) :: _) <- repN(3 * n, number)
-      if numbers.forall(_.suit == suit) && numbers.map(_.value - value) == Seq(0, 1, 2).flatMap(i => Seq.fill(n)(i))
-    } yield Seq(Seq.fill(n)(Meld.Seq(suit, value)), numbers.distinct.map(Meld.Set(_, n)))
-  def seq(n: Int): Parser[Seq[Seq[Meld.Seq]]] =
-    for {
-      numbers@(Number(suit, value) :: _) <- repN(3 * n, number)
-      if numbers.forall(_.suit == suit) && numbers.map(_.value - value) == (0 until n flatMap (i => 0 until 3 map (_ + i))).sorted
-    } yield Seq(for (i <- 0 until n) yield Meld.Seq(suit, value + i))
-  def hand: Parser[Seq[Seq[Meld]]] =
-    rep(seq(3) | seq(2) | seq(1) | complex(3) | complex(2) | set(3) | set(2)) ^^ (patterns => sequence(patterns).map(_.flatten))
 }

@@ -10,26 +10,18 @@ sealed trait Tile {
 }
 
 object Tile {
-  def indexOf(tile: Tile): Int =
-    tile match {
-      case _: Number => 0
-      case _: Wind => 1
-      case _: Dragon => 2
-    }
-  implicit def ordering =
+  def values: IndexedSeq[Tile] =
+    Character.values ++ Circle.values ++ Bamboo.values ++ Wind.values ++ Dragon.values
+  implicit def ordering: Ordering[Tile] =
     new Ordering[Tile] {
       def compare(x: Tile, y: Tile) =
-        (x, y) match {
-          case (x: Number, y: Number) => Ordering[Number].compare(x, y)
-          case (x: Wind, y: Wind) => Ordering[Wind].compare(x, y)
-          case (x: Dragon, y: Dragon) => Ordering[Dragon].compare(x, y)
-          case _ => indexOf(x) compareTo indexOf(y)
-        }
+        values.indexOf(x) compareTo values.indexOf(y)
     }
 }
 
 sealed trait Suit {
-  def apply(value: Int): Number = Number(this, value)
+  def apply(value: Int) = Number(this, value)
+  def values = 1 to 9 map apply
 }
 
 case object Character extends Suit
@@ -38,16 +30,11 @@ case object Circle extends Suit
 
 case object Bamboo extends Suit
 
-object Suit extends Enum[Suit] {
+object Suit {
   def values = Vector(Character, Circle, Bamboo)
 }
 
 case class Number(suit: Suit, value: Int) extends Tile
-
-object Number {
-  implicit def ordering: Ordering[Number] =
-    Ordering.by((n: Number) => n.suit -> n.value)
-}
 
 sealed trait Wind extends Tile
 
@@ -59,7 +46,7 @@ case object West extends Wind
 
 case object North extends Wind
 
-object Wind extends Enum[Wind] {
+object Wind {
   def values = Vector(East, South, West, North)
 }
 
@@ -71,6 +58,6 @@ case object Green extends Dragon
 
 case object Red extends Dragon
 
-object Dragon extends Enum[Dragon] {
+object Dragon {
   def values = Vector(White, Green, Red)
 }

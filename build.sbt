@@ -1,5 +1,5 @@
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 organization := "mahjongs"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3"
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
