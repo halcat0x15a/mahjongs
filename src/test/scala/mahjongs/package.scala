@@ -1,10 +1,8 @@
-package mahjongs
+import org.scalacheck.Gen
 
-import org.scalacheck.{Properties, Gen}
-import org.scalacheck.Prop._
-
-object MahjongsSpecification extends Properties("Mahjongs") {
+package object mahjongs {
   val tile = Gen.oneOf(Tile.values)
+  val wind = Gen.oneOf(Wind.values)
   val seq = for {
     suit <- Gen.oneOf(Suit.values)
     start <- Gen.oneOf(1 to 7)
@@ -13,6 +11,15 @@ object MahjongsSpecification extends Properties("Mahjongs") {
   val triplet = tile.map(Meld.Triplet)
   val quad = tile.map(Meld.Quad)
   val meld = Gen.oneOf(seq, triplet, quad)
+  val waiting = Gen.oneOf(Wait.Sides, Wait.Single, Wait.Double, Wait.Closed, Wait.Edge)
+  val winning = Gen.oneOf(Drawn, Discard)
+  val situation =
+    for {
+      winning <- winning
+      dealer <- Gen.oneOf(true, false)
+      player <- wind
+      prevailing <- wind
+    } yield Situation(winning, dealer, player, prevailing)
   val hand =
     for {
       pair <- pair
@@ -20,9 +27,7 @@ object MahjongsSpecification extends Properties("Mahjongs") {
       concealed = melds.get(true).getOrElse(Nil)
       melded = melds.get(false).getOrElse(Nil)
       if (pair :: concealed ::: melded).flatMap(_.tiles).groupBy(identity).values.forall(_.size <= 4)
-      tiles = (pair :: concealed).filterNot(_.isInstanceOf[Meld.Quad]).flatMap(_.tiles)
-    } yield Hand(tiles.head, tiles.tail, concealed.collect { case quad: Meld.Quad => quad }, melded)
-  property("combinations") = forAll(hand) { hand =>
-    Mahjongs.combinations(hand.tile +: hand.concealed).forall(_.size > 0)
-  }
+      wait <- waiting
+      situation <- situation
+    } yield Hand(pair +: concealed, melded, wait)(situation)
 }

@@ -1,3 +1,3 @@
 package object mahjongs {
-  def sequence[A](xs: Seq[Seq[A]]): Seq[Seq[A]] = xs.foldLeft(Seq(Seq[A]()))((a, b) => for (xs <- a; x <- b) yield xs :+ x)
+  def ceil(value: Double, n: Int): Double = math.ceil(value / n) * n
 }

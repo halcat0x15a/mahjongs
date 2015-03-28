@@ -2,17 +2,8 @@ package mahjongs
 
 import PartialFunction._
 
-sealed trait Meld extends Any {
+sealed trait Meld {
   def tiles: Seq[Tile]
-  def fu: Int =
-    this match {
-      case Meld.Set(tile, 3) =>
-        if (tile.isTerminal || tile.isHonor) 8 else 4
-      case Meld.Set(tile, 4) =>
-        if (tile.isTerminal || tile.isHonor) 32 else 16
-      case Meld.Set(tile, 4) if tile.isTerminal || tile.isHonor => 2
-      case _ => 0
-    }
   def contains(suit: Suit): Boolean =
     this match {
       case Meld.Set(Number(`suit`, _), _) => true
@@ -37,22 +28,23 @@ sealed trait Meld extends Any {
 }
 
 object Meld {
-  sealed trait Set extends Any with Meld {
-    def tile: Tile
-    def size: Int
-    def tiles = List.fill(size)(tile)
+  def parse(tiles: scala.Seq[Tile]): Option[Meld] =
+    condOpt(tiles) {
+      case numbers@Number(suit, start) +: _ if numbers == (start until start + 3 map suit.apply) => Seq(suit, start)
+      case tiles@scala.Seq(tile, _) if tiles.forall(_ == tile) => Pair(tile)
+      case tiles@scala.Seq(tile, _, _) if tiles.forall(_ == tile) => Triplet(tile)
+      case tiles@scala.Seq(tile, _, _, _) if tiles.forall(_ == tile) => Quad(tile)
+    }
+  sealed trait Set extends Meld {
+    val tile: Tile
+    val size: Int
+    lazy val tiles = List.fill(size)(tile)
   }
-  case class Pair(tile: Tile) extends AnyVal with Set {
-    def size = 2
-  }
-  case class Triplet(tile: Tile) extends AnyVal with Set {
-    def size = 3
-  }
-  case class Quad(tile: Tile) extends AnyVal with Set {
-    def size = 4
-  }
+  case class Pair(tile: Tile) extends Set { val size = 2 }
+  case class Triplet(tile: Tile) extends Set { val size = 3 }
+  case class Quad(tile: Tile) extends Set { val size = 4 }
   case class Seq(suit: Suit, start: Int) extends Meld {
-    def tiles = start until start + 3 map suit.apply
+    lazy val tiles = start until start + 3 map suit.apply
   }
   object Set {
     def apply(tile: Tile, size: Int): Set =
