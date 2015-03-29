@@ -35,7 +35,7 @@ object Yaku {
   case object Selfpick extends Yaku {
     def value = 1
     def decrease = false
-    def check(hand: Hand) = hand.winning == Drawn
+    def check(hand: Hand) = hand.situation.drawn
   }
   case class HonorTiles(tile: Tile) extends AnyVal with Yaku {
     def value = 1

@@ -4,17 +4,11 @@ case class Hand(concealed: Seq[Meld], melded: Seq[Meld], waiting: Wait)(implicit
   lazy val yaku: Seq[Yaku] = Yaku.values(situation.prevailing, situation.player).map(yaku => yaku.find(_.check(this))).flatten
   lazy val han: Int =
     yaku.map(yaku => if (yaku.decrease && melded.nonEmpty) yaku.value - 1 else yaku.value).sum
-  lazy val winning: Option[Fu] =
-    situation.winning match {
-      case Drawn => Some(Fu.Drawn)
-      case Discard if melded.isEmpty => Some(Fu.ConcealedDiscard)
-      case _ => None
-    }
   lazy val fu: Seq[Fu] =
-    if (winning == Drawn && yaku.contains(Yaku.NoPoints)) List(Fu.DrawnNoPoints)
+    if (situation.drawn && yaku.contains(Yaku.NoPoints)) List(Fu.DrawnNoPoints)
     else if (yaku.contains(Yaku.SevenPairs)) List(Fu.SevenPairs)
     else if (melded.nonEmpty && Yaku.NoPoints.check(this)) List(Fu.MeldedNoPoints)
-    else Fu.Base +: Fu.Wait(waiting) +: (concealed.map(Fu.Meld(true, _)) ++ melded.map(Fu.Meld(false, _)) ++ winning.toList)
+    else Fu.Base +: Fu.Wait(waiting) +: (concealed.map(Fu.Meld(true, _)) ++ melded.map(Fu.Meld(false, _)) ++ (if (situation.drawn) List(Fu.Drawn) else if (melded.isEmpty) List(Fu.ConcealedDiscard) else Nil))
   lazy val base =
     if (han >= 13) 8000
     else if (han >= 11) 6000
@@ -22,6 +16,17 @@ case class Hand(concealed: Seq[Meld], melded: Seq[Meld], waiting: Wait)(implicit
     else if (han >= 6) 3000
     else if (han >= 5) 2000
     else math.min(ceil(fu.map(_.value).sum, 10) * Math.pow(2, han + 2), 2000)
+  lazy val score: Score =
+    if (situation.drawn)
+      if (situation.dealer)
+        DealerDrawn(ceil(base * 2, 100).toInt)
+      else
+        NonDealerDrawn(ceil(base * 2, 100).toInt, ceil(base, 100).toInt)
+    else
+      if (situation.dealer)
+        Discard(ceil(base * 6, 100).toInt)
+      else
+        Discard(ceil(base * 4, 100).toInt)
 }
 
 object Hand {
@@ -40,12 +45,12 @@ object Hand {
         seq ++ sets
       case _ => List(Nil)
     }
-  def patterns(tile: Tile, concealed: Seq[Tile], quads: Seq[Meld.Quad], melded: Seq[Meld])(implicit situation: Situation): Seq[Hand] = {
+  def patterns(tile: Tile, concealed: Seq[Tile], melded: Seq[Meld])(implicit situation: Situation): Seq[Hand] = {
     val tiles = (tile -> true) +: concealed.map(_ -> false)
     for {
       melds <- Hand.combinations(tiles.map(_._1))
-      if melds.size + quads.size + melded.size == 5
+      if melds.size + melded.size == 5
       wait <- Wait.find(tiles.takeWhile(_._2).size, melds).toSeq
-    } yield Hand(melds ++ quads, melded, wait)
+    } yield Hand(melds, melded, wait)
   }
 }
