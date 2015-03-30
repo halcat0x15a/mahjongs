@@ -1,25 +1,25 @@
 import org.scalacheck.Gen
 
 package object mahjongs {
-  val tile = Gen.oneOf(Tile.values)
-  val wind = Gen.oneOf(Wind.values)
+  val tile = Gen.oneOf(牌.values)
+  val wind = Gen.oneOf(風牌.values)
   val seq = for {
-    suit <- Gen.oneOf(Suit.values)
-    start <- Gen.oneOf(1 to 7)
-  } yield Meld.Seq(suit, start)
-  val pair = tile.map(Meld.Pair)
-  val triplet = tile.map(Meld.Triplet)
-  val quad = tile.map(Meld.Quad)
+    suit <- Gen.oneOf(組.values)
+    i <- Gen.oneOf(0 until 7)
+  } yield 順子(suit.values(i))
+  val pair = tile.map(対子)
+  val triplet = tile.map(刻子)
+  val quad = tile.map(槓子)
   val meld = Gen.oneOf(seq, triplet, quad)
-  val waiting = Gen.oneOf(Wait.Sides, Wait.Single, Wait.Double, Wait.Closed, Wait.Edge)
-  val winning = Gen.oneOf(Drawn, Discard)
+  val waiting = Gen.oneOf(聴牌.values)
   val situation =
     for {
-      winning <- winning
       dealer <- Gen.oneOf(true, false)
-      player <- wind
+      winning <- Gen.oneOf(true, false)
       prevailing <- wind
-    } yield Situation(winning, dealer, player, prevailing)
+      player <- wind
+      dora <- Gen.choose(0, 40)
+    } yield 状況(winning, dealer, player, prevailing, dora)
   val hand =
     for {
       pair <- pair
@@ -29,5 +29,5 @@ package object mahjongs {
       if (pair :: concealed ::: melded).flatMap(_.tiles).groupBy(identity).values.forall(_.size <= 4)
       wait <- waiting
       situation <- situation
-    } yield Hand(pair +: concealed, melded, wait)(situation)
+    } yield 手牌(pair +: concealed, melded, wait)(situation)
 }
