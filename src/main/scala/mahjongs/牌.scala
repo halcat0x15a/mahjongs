@@ -70,14 +70,14 @@ case object 索子 extends 組 {
 }
 
 case object 一索 extends 索子("\ud83c\udc10") with 老頭牌
-case object 二索 extends 索子("\ud83c\udc10") with 中張牌
-case object 三索 extends 索子("\ud83c\udc10") with 中張牌
-case object 四索 extends 索子("\ud83c\udc10") with 中張牌
-case object 五索 extends 索子("\ud83c\udc10") with 中張牌
-case object 六索 extends 索子("\ud83c\udc10") with 中張牌
-case object 七索 extends 索子("\ud83c\udc10") with 中張牌
-case object 八索 extends 索子("\ud83c\udc10") with 中張牌
-case object 九索 extends 索子("\ud83c\udc10") with 老頭牌
+case object 二索 extends 索子("\ud83c\udc11") with 中張牌
+case object 三索 extends 索子("\ud83c\udc12") with 中張牌
+case object 四索 extends 索子("\ud83c\udc13") with 中張牌
+case object 五索 extends 索子("\ud83c\udc14") with 中張牌
+case object 六索 extends 索子("\ud83c\udc15") with 中張牌
+case object 七索 extends 索子("\ud83c\udc16") with 中張牌
+case object 八索 extends 索子("\ud83c\udc17") with 中張牌
+case object 九索 extends 索子("\ud83c\udc18") with 老頭牌
 
 sealed trait 字牌 extends 么九牌
 object 字牌 {

@@ -2,22 +2,27 @@ package mahjongs
 
 case class 手牌(concealed: Seq[面子], melded: Seq[面子], waiting: 聴牌)(implicit val situation: 状況) {
   lazy val melds = concealed ++ melded
-  lazy val hand: List[役] = 役.values(situation.prevailing, situation.player).filter(_.check(this))
-  lazy val han: Int =
-    hand.map(hand => if (hand.decrease && melded.nonEmpty) hand.value - 1 else hand.value).sum
-  lazy val fu: List[符] = { import 符._
-    if (situation.selfpick && hand.contains(役.平和)) List(自摸平和)
-    else if (hand.contains(役.七対子)) List(七対子)
-    else if (melded.nonEmpty && 役.平和.check(this)) List(栄平和)
-    else 副底 :: waiting :: concealed.flatMap(符.parse(true, _)).toList ::: melded.flatMap(符.parse(false, _)).toList ::: (if (hand.contains(役.門前清自摸和)) List(自摸符) else if (melded.isEmpty) List(門前加符) else Nil)
+  lazy val yaku: List[役] = {
+    val yaku = (役.values(situation.prevailing, situation.player) ::: situation.yaku.filter(_.check(this))).filter(_.check(this))
+    yaku.diff(yaku.collect(役.dependencies))
   }
-  lazy val base =
+  lazy val han: Int =
+    yaku.map(yaku => if (yaku.decrease && melded.nonEmpty) yaku.value - 1 else yaku.value).sum + situation.dora
+  lazy val fu: List[符] = { import 符._
+    if (situation.selfpick && yaku.contains(役.平和)) List(自摸平和)
+    else if (yaku.contains(役.七対子)) List(七対子)
+    else if (melded.nonEmpty && 役.平和.check(this)) List(栄平和)
+    else 副底 :: waiting :: concealed.flatMap(符.parse(true, _)).toList ::: melded.flatMap(符.parse(false, _)).toList ::: (if (yaku.contains(役.門前清自摸和)) List(自摸符) else if (melded.isEmpty) List(門前加符) else Nil)
+  }
+  lazy val point: Double =
+    ceil(fu.map(_.value).sum, 10)
+  lazy val base: Double =
     if (han >= 13) 8000
     else if (han >= 11) 6000
     else if (han >= 8) 4000
     else if (han >= 6) 3000
     else if (han >= 5) 2000
-    else math.min(ceil(fu.map(_.value).sum, 10) * Math.pow(2, han + 2), 2000)
+    else math.min(point * Math.pow(2, han + 2), 2000)
   lazy val score: 和了 =
     if (situation.selfpick)
       if (situation.dealer)
@@ -57,7 +62,7 @@ object 手牌 {
     val tiles = (tile -> true) +: concealed.map(_ -> false)
     for {
       melds <- combinations(tiles.map(_._1))
-      if melds.size + melded.size == 5
+      if melds.size + melded.size == 5 || melds.forall(_.isInstanceOf[対子]) && melded.isEmpty
       meld <- melds.find(_.tile == tile).toList
       wait <- 聴牌.parse(tile, meld).toList
     } yield 手牌(melds, melded, wait)
