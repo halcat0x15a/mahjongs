@@ -48,7 +48,7 @@ object 役 {
   }
   case object 平和 extends 役(1, false) {
     def check(hand: 手牌) = 
-      hand.waiting == 聴牌.両面 && hand.melded.isEmpty && hand.concealed.forall(meld => 符.parse(true, meld)(hand.situation).isEmpty)
+      hand.waiting == 両面 && hand.melded.isEmpty && hand.concealed.forall(meld => 符.parse(true, meld)(hand.situation).isEmpty)
   }
   case object 一盃口 extends 役(1, false) {
     def check(hand: 手牌) =

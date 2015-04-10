@@ -4,6 +4,16 @@ import PartialFunction._
 
 sealed trait 聴牌 extends 符
 
+case object 両面 extends 聴牌 { val value = 0 }
+
+case object 嵌張 extends 聴牌 { val value = 2 }
+
+case object 辺張 extends 聴牌 { val value = 2 }
+
+case object 単騎 extends 聴牌 { val value = 2 }
+
+case object 双碰 extends 聴牌 { val value = 0 }
+
 object 聴牌 {
   def values = List(両面, 嵌張, 辺張, 単騎, 双碰)
   def parse(tile: 牌, meld: 面子): Option[聴牌] = { import 面子._
@@ -15,9 +25,4 @@ object 聴牌 {
       case (数牌(n), 順子(数牌(m))) if n == m || n == m + 2 => 両面
     }
   }
-  case object 両面 extends 聴牌 { val value = 0 }
-  case object 嵌張 extends 聴牌 { val value = 2 }
-  case object 辺張 extends 聴牌 { val value = 2 }
-  case object 単騎 extends 聴牌 { val value = 2 }
-  case object 双碰 extends 聴牌 { val value = 0 }
 }

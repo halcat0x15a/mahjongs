@@ -15,11 +15,11 @@ package object mahjongs {
   val situation =
     for {
       dealer <- Gen.oneOf(true, false)
-      winning <- Gen.oneOf(true, false)
+      selfpick <- Gen.oneOf(true, false)
       prevailing <- wind
       player <- wind
       dora <- Gen.choose(0, 40)
-    } yield 状況(winning, dealer, player, prevailing, dora)
+    } yield 状況(dealer, selfpick, player, prevailing, dora, Nil)
   val hand =
     for {
       pair <- pair

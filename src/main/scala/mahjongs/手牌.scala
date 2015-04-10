@@ -12,17 +12,17 @@ case class 手牌(concealed: Seq[面子], melded: Seq[面子], waiting: 聴牌)(
     if (situation.selfpick && yaku.contains(役.平和)) List(自摸平和)
     else if (yaku.contains(役.七対子)) List(七対子)
     else if (melded.nonEmpty && 役.平和.check(this)) List(栄平和)
-    else 副底 :: (if (waiting.value > 0) List(waiting) else Nil) ::: concealed.flatMap(符.parse(true, _)).toList ::: melded.flatMap(符.parse(false, _)).toList ::: (if (yaku.contains(役.門前清自摸和)) List(自摸符) else if (melded.isEmpty) List(門前加符) else Nil)
+    else 副底 :: (if (waiting.value > 0) List(waiting) else Nil) ::: concealed.flatMap(符.parse(true, _)).toList ::: melded.flatMap(符.parse(false, _)).toList ::: (if (situation.selfpick) List(自摸符) else if (melded.isEmpty) List(門前加符) else Nil)
   }
-  lazy val point: Double =
+  lazy val point: Int =
     ceil(fu.map(_.value).sum, 10)
-  lazy val base: Double =
+  lazy val base: Int =
     if (han >= 13) 8000
     else if (han >= 11) 6000
     else if (han >= 8) 4000
     else if (han >= 6) 3000
     else if (han >= 5) 2000
-    else math.min(point * Math.pow(2, han + 2), 2000)
+    else math.min(point * Math.pow(2, han + 2), 2000).toInt
   lazy val score: 和了 =
     if (situation.selfpick)
       if (situation.dealer)
@@ -34,7 +34,8 @@ case class 手牌(concealed: Seq[面子], melded: Seq[面子], waiting: 聴牌)(
         栄和(ceil(base * 6, 100).toInt)
       else
         栄和(ceil(base * 4, 100).toInt)
-  private def ceil(value: Double, n: Int): Double = math.ceil(value / n) * n
+  override def toString = s"手牌($concealed, $melded, $waiting)($situation)"
+  private def ceil(value: Double, n: Int): Int = (math.ceil(value / n) * n).toInt
 }
 
 object 手牌 {
@@ -62,7 +63,9 @@ object 手牌 {
     val tile = concealed(winning)
     for {
       concealed <- combinations(concealed)
-      if concealed.size + melded.size == 5 || concealed.forall(_.isInstanceOf[対子]) && melded.isEmpty && concealed.size == 7
+      if (concealed ++ melded).flatMap(_.tiles).size >= 14 &&
+         concealed.size + melded.size == 5 ||
+         concealed.forall(_.isInstanceOf[対子]) && melded.isEmpty && concealed.size == 7
       meld <- concealed.find(_.tiles.contains(tile)).toList
       wait <- 聴牌.parse(tile, meld).toList
     } yield 手牌(concealed, melded, wait)
