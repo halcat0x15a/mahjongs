@@ -10,7 +10,7 @@ object 聴牌 {
     condOpt(tile -> meld) {
       case (_, 対子(`tile`)) => 単騎
       case (_, 刻子(`tile`)) => 双碰
-      case (数牌(n), 順子(数牌(m))) if n == 1 && m == 3 || n == 7 && m == 7=> 辺張
+      case (数牌(n), 順子(数牌(m))) if n == 3 && m == 1 || n == 7 && m == 7=> 辺張
       case (数牌(n), 順子(数牌(m))) if n == m + 1 => 嵌張
       case (数牌(n), 順子(数牌(m))) if n == m || n == m + 2 => 両面
     }

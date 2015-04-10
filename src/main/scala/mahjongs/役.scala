@@ -10,7 +10,7 @@ object 役 {
   def values(prevailing: 風牌, player: 風牌): List[役] =
     List(役牌(prevailing), 役牌(player), 役牌(白), 役牌(發), 役牌(中), 門前清自摸和, 断么九, 平和, 一盃口, 七対子, 混全帯么九, 対々和, 一気通貫, 三暗刻, 三槓子, 三色同刻, 三色同順, 混老頭, 小三元, 二盃口, 純全帯么九, 混一色, 清一色)
   def dependencies: Map[役, 役] =
-    Map(清一色 -> 混一色, 純全帯么九 -> 混全帯么九)
+    Map(清一色 -> 混一色, 純全帯么九 -> 混全帯么九, 二盃口 -> 一盃口)
   case object 立直 extends 役(1, false) {
     def check(hand: 手牌) =
       hand.melded.isEmpty
@@ -90,7 +90,7 @@ object 役 {
   }
   case object 三色同刻 extends 役(2, false) {
     def check(hand: 手牌) =
-      (0 until 9).exists(i => 組.values.forall(suit => hand.melds.contains(刻子(suit.values(i)))))
+      (0 until 9).exists(i => 組.values.forall(suit => hand.melds.exists(Set(刻子(suit.values(i)), 槓子(suit.values(i))))))
   }
   case object 三色同順 extends 役(2, true) {
     def check(hand: 手牌) =
@@ -102,7 +102,7 @@ object 役 {
   }
   case object 小三元 extends 役(2, false) {
     def check(hand: 手牌) =
-      三元牌.values.permutations.exists(tiles => List(対子(tiles(0)), 刻子(tiles(1)), 刻子(tiles(2))).forall(hand.melds.contains))
+      三元牌.values.permutations.exists(tiles => List[Set[面子]](Set(対子(tiles(0))), Set(刻子(tiles(1)), 槓子(tiles(1))), Set(刻子(tiles(2)), 槓子(tiles(1)))).forall(hand.melds.exists))
   }
   case object 二盃口 extends 役(3, false) {
     def check(hand: 手牌) =
