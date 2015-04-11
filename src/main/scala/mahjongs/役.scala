@@ -36,7 +36,7 @@ object 役 {
   }
   case class 役牌(tile: 字牌) extends 役(1, false) {
     def check(hand: 手牌) =
-      hand.melds.exists(_.tile == tile)
+      hand.melds.exists(Set(刻子(tile), 槓子(tile)))
   }
   case object 門前清自摸和 extends 役(1, false) {
     def check(hand: 手牌) =
