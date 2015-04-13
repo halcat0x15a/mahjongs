@@ -1,21 +1,30 @@
 package mahjongs
 
-case class 手牌(concealed: Seq[面子], melded: Seq[面子], waiting: 聴牌)(implicit val situation: 状況) {
+import PartialFunction._
+
+case class 手牌(concealed: List[面子], melded: List[面子], waiting: 聴牌)(implicit val situation: 状況) {
   lazy val melds = concealed ++ melded
-  lazy val yaku: List[役] = {
-    val yaku = (役.values(situation.prevailing, situation.player) ::: situation.yaku.filter(_.check(this))).filter(_.check(this))
-    yaku.diff(yaku.collect(役.dependencies))
+  lazy val yaku: Map[役, Int] = {
+    val yaku = (役.values(situation.prevailing, situation.player) ::: situation.yaku).collect {
+      case yaku if yaku.check.isDefinedAt(this) => yaku -> yaku.check(this)
+    }.toMap
+    yaku -- yaku.keys.collect(役.dependencies)
   }
-  lazy val han: Int =
-    yaku.map(yaku => if (yaku.decrease && melded.nonEmpty) yaku.value - 1 else yaku.value).sum + situation.dora
-  lazy val fu: List[符] = { import 符._
-    if (situation.selfpick && yaku.contains(役.平和)) List(自摸平和)
-    else if (yaku.contains(役.七対子)) List(七対子)
-    else if (melded.nonEmpty && 役.平和.check(this)) List(栄平和)
-    else 副底 :: (if (waiting.value > 0) List(waiting) else Nil) ::: concealed.flatMap(符.parse(true, _)).toList ::: melded.flatMap(符.parse(false, _)).toList ::: (if (situation.selfpick) List(自摸符) else if (melded.isEmpty) List(門前加符) else Nil)
-  }
+  lazy val han: Int = yaku.values.sum + situation.dora
+  lazy val fu: List[符] =
+    if (situation.selfpick && yaku.contains(平和)) {
+      List(自摸平和)
+    } else if (yaku.contains(七対子)) {
+      List(七対子)
+    } else if (melded.nonEmpty && 平和.check.isDefinedAt(this)) {
+      List(栄平和)
+    } else {
+      val wait = condOpt(waiting) { case fu: 符 => fu }
+      val winning = if (situation.selfpick) Some(自摸符) else if (melded.isEmpty) Some(門前加符) else None
+      副底 :: wait.toList ::: concealed.flatMap(門前.parse).toList ::: melded.flatMap(副露.parse).toList ::: winning.toList
+    }
   lazy val point: Int =
-    ceil(fu.map(_.value).sum, 10)
+    ceil(fu.map(_.point).sum, 10)
   lazy val base: Int =
     if (han >= 13) 8000
     else if (han >= 11) 6000
@@ -26,14 +35,14 @@ case class 手牌(concealed: Seq[面子], melded: Seq[面子], waiting: 聴牌)(
   lazy val score: 和了 =
     if (situation.selfpick)
       if (situation.dealer)
-        親自摸和(ceil(base * 2, 100).toInt)
+        自摸和(List.fill(3)(ceil(base * 2, 100)))
       else
-        子自摸和(ceil(base * 2, 100).toInt, ceil(base, 100).toInt)
+        自摸和(ceil(base * 2, 100) :: List.fill(2)(ceil(base, 100)))
     else
       if (situation.dealer)
-        栄和(ceil(base * 6, 100).toInt)
+        栄和(ceil(base * 6, 100))
       else
-        栄和(ceil(base * 4, 100).toInt)
+        栄和(ceil(base * 4, 100))
   override def toString = s"手牌($concealed, $melded, $waiting)($situation)"
   private def ceil(value: Double, n: Int): Int = (math.ceil(value / n) * n).toInt
 }
@@ -68,6 +77,6 @@ object 手牌 {
          concealed.forall(_.isInstanceOf[対子]) && melded.isEmpty && concealed.size == 7
       meld <- concealed.find(_.tiles.contains(tile)).toList
       wait <- 聴牌.parse(tile, meld).toList
-    } yield 手牌(concealed, melded, wait)
+    } yield 手牌(concealed.toList, melded.toList, wait)
   }
 }

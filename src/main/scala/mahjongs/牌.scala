@@ -1,6 +1,6 @@
 package mahjongs
 
-sealed trait 牌 {
+sealed abstract class 牌 {
   def unicode: String
 }
 
@@ -14,14 +14,14 @@ object 牌 {
     }
 }
 
-sealed trait 組 {
+sealed abstract class 組 {
   def values: List[数牌]
 }
 object 組 {
   def values = List(萬子, 筒子, 索子)
 }
 
-sealed abstract class 数牌(val suit: 組) extends 牌 {
+sealed abstract class 数牌(val suit: 組, val unicode: String) extends 牌 {
   def index: Int = suit.values.indexOf(this)
   def sequence: List[数牌] = suit.values.slice(index, index + 3)
 }
@@ -31,55 +31,52 @@ object 数牌 {
 
 sealed trait 么九牌 extends 牌
 
-sealed trait 老頭牌 extends 么九牌
+sealed trait 老頭牌 extends 数牌 with 么九牌
 sealed trait 中張牌 extends 数牌
 
-sealed abstract class 萬子(val unicode: String) extends 数牌(萬子)
 case object 萬子 extends 組 {
   def values = List(一萬, 二萬, 三萬, 四萬, 五萬, 六萬, 七萬, 八萬, 九萬)
 }
 
-case object 一萬 extends 萬子("\ud83c\udc07") with 老頭牌
-case object 二萬 extends 萬子("\ud83c\udc08") with 中張牌
-case object 三萬 extends 萬子("\ud83c\udc09") with 中張牌
-case object 四萬 extends 萬子("\ud83c\udc0a") with 中張牌
-case object 五萬 extends 萬子("\ud83c\udc0b") with 中張牌
-case object 六萬 extends 萬子("\ud83c\udc0c") with 中張牌
-case object 七萬 extends 萬子("\ud83c\udc0d") with 中張牌
-case object 八萬 extends 萬子("\ud83c\udc0e") with 中張牌
-case object 九萬 extends 萬子("\ud83c\udc0f") with 老頭牌
+case object 一萬 extends 数牌(萬子, "\ud83c\udc07") with 老頭牌
+case object 二萬 extends 数牌(萬子, "\ud83c\udc08") with 中張牌
+case object 三萬 extends 数牌(萬子, "\ud83c\udc09") with 中張牌
+case object 四萬 extends 数牌(萬子, "\ud83c\udc0a") with 中張牌
+case object 五萬 extends 数牌(萬子, "\ud83c\udc0b") with 中張牌
+case object 六萬 extends 数牌(萬子, "\ud83c\udc0c") with 中張牌
+case object 七萬 extends 数牌(萬子, "\ud83c\udc0d") with 中張牌
+case object 八萬 extends 数牌(萬子, "\ud83c\udc0e") with 中張牌
+case object 九萬 extends 数牌(萬子, "\ud83c\udc0f") with 老頭牌
 
-sealed abstract class 筒子(val unicode: String) extends 数牌(筒子)
 case object 筒子 extends 組 {
   def values = List(一筒, 二筒, 三筒, 四筒, 五筒, 六筒, 七筒, 八筒, 九筒)
 }
 
-case object 一筒 extends 筒子("\ud83c\udc19") with 老頭牌
-case object 二筒 extends 筒子("\ud83c\udc1a") with 中張牌
-case object 三筒 extends 筒子("\ud83c\udc1b") with 中張牌
-case object 四筒 extends 筒子("\ud83c\udc1c") with 中張牌
-case object 五筒 extends 筒子("\ud83c\udc1d") with 中張牌
-case object 六筒 extends 筒子("\ud83c\udc1e") with 中張牌
-case object 七筒 extends 筒子("\ud83c\udc1f") with 中張牌
-case object 八筒 extends 筒子("\ud83c\udc20") with 中張牌
-case object 九筒 extends 筒子("\ud83c\udc21") with 老頭牌
+case object 一筒 extends 数牌(筒子, "\ud83c\udc19") with 老頭牌
+case object 二筒 extends 数牌(筒子, "\ud83c\udc1a") with 中張牌
+case object 三筒 extends 数牌(筒子, "\ud83c\udc1b") with 中張牌
+case object 四筒 extends 数牌(筒子, "\ud83c\udc1c") with 中張牌
+case object 五筒 extends 数牌(筒子, "\ud83c\udc1d") with 中張牌
+case object 六筒 extends 数牌(筒子, "\ud83c\udc1e") with 中張牌
+case object 七筒 extends 数牌(筒子, "\ud83c\udc1f") with 中張牌
+case object 八筒 extends 数牌(筒子, "\ud83c\udc20") with 中張牌
+case object 九筒 extends 数牌(筒子, "\ud83c\udc21") with 老頭牌
 
-sealed abstract class 索子(val unicode: String) extends 数牌(索子)
 case object 索子 extends 組 {
   def values = List(一索, 二索, 三索, 四索, 五索, 六索, 七索, 八索, 九索)
 }
 
-case object 一索 extends 索子("\ud83c\udc10") with 老頭牌
-case object 二索 extends 索子("\ud83c\udc11") with 中張牌
-case object 三索 extends 索子("\ud83c\udc12") with 中張牌
-case object 四索 extends 索子("\ud83c\udc13") with 中張牌
-case object 五索 extends 索子("\ud83c\udc14") with 中張牌
-case object 六索 extends 索子("\ud83c\udc15") with 中張牌
-case object 七索 extends 索子("\ud83c\udc16") with 中張牌
-case object 八索 extends 索子("\ud83c\udc17") with 中張牌
-case object 九索 extends 索子("\ud83c\udc18") with 老頭牌
+case object 一索 extends 数牌(索子, "\ud83c\udc10") with 老頭牌
+case object 二索 extends 数牌(索子, "\ud83c\udc11") with 中張牌
+case object 三索 extends 数牌(索子, "\ud83c\udc12") with 中張牌
+case object 四索 extends 数牌(索子, "\ud83c\udc13") with 中張牌
+case object 五索 extends 数牌(索子, "\ud83c\udc14") with 中張牌
+case object 六索 extends 数牌(索子, "\ud83c\udc15") with 中張牌
+case object 七索 extends 数牌(索子, "\ud83c\udc16") with 中張牌
+case object 八索 extends 数牌(索子, "\ud83c\udc17") with 中張牌
+case object 九索 extends 数牌(索子, "\ud83c\udc18") with 老頭牌
 
-sealed trait 字牌 extends 么九牌
+sealed abstract class 字牌 extends 么九牌
 object 字牌 {
   def values = 風牌.values ::: 三元牌.values
 }
