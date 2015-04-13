@@ -68,15 +68,14 @@ object 手牌 {
         seq ++ sets
       case _ => List(Nil)
     }
-  def patterns(winning: Int, concealed: Seq[牌], melded: Seq[面子])(implicit situation: 状況): Seq[手牌] = {
-    val tile = concealed(winning)
+  def patterns(winning: Int, concealed: Seq[牌], melded: Seq[面子])(implicit situation: 状況): Seq[手牌] =
     for {
-      concealed <- combinations(concealed)
-      if (concealed ++ melded).flatMap(_.tiles).size >= 14 &&
-         concealed.size + melded.size == 5 ||
-         concealed.forall(_.isInstanceOf[対子]) && melded.isEmpty && concealed.size == 7
-      meld <- concealed.find(_.tiles.contains(tile)).toList
+      melds <- combinations(concealed)
+      if (melds ++ melded).flatMap(_.tiles).size >= 14 &&
+         melds.size + melded.size == 5 ||
+         melds.forall(_.isInstanceOf[対子]) && melded.isEmpty && melds.size == 7
+      tile <- concealed.lift(winning).toList
+      meld <- melds.find(_.tiles.contains(tile)).toList
       wait <- 聴牌.parse(tile, meld).toList
-    } yield 手牌(concealed.toList, melded.toList, wait)
-  }
+    } yield 手牌(melds, melded.toList, wait)
 }
