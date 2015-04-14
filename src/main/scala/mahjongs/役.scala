@@ -21,31 +21,31 @@ case object 二重立直 extends 役 {
 
 case object 一発 extends 役 {
   lazy val check: Check = {
-    case _ => 1
+    case 手牌(_, Nil, _) => 1
   }
 }
 
 case object 嶺上開花 extends 役 {
   lazy val check: Check = {
-    case _ => 1
-  }
-}
-
-case object 海底摸月 extends 役 {
-  lazy val check: Check = {
-    case _ => 1
-  }
-}
-
-case object 河底撈魚 extends 役 {
-  lazy val check: Check = {
-    case _ => 1
+    case hand if hand.situation.selfpick => 1
   }
 }
 
 case object 槍槓 extends 役 {
   lazy val check: Check = {
-    case _ => 1
+    case hand if !hand.situation.selfpick => 1
+  }
+}
+
+case object 海底摸月 extends 役 {
+  lazy val check: Check = {
+    case hand if hand.situation.selfpick => 1
+  }
+}
+
+case object 河底撈魚 extends 役 {
+  lazy val check: Check = {
+    case hand if !hand.situation.selfpick => 1
   }
 }
 
@@ -142,7 +142,12 @@ case object 三色同順 extends 役 {
 
 case object 混老頭 extends 役 {
   lazy val check: Check = {
-    case hand if hand.melds.forall(_.tile.isInstanceOf[么九牌]) => 2
+    case hand if hand.melds.forall {
+      case 対子(_: 么九牌) => true
+      case 刻子(_: 么九牌) => true
+      case 槓子(_: 么九牌) => true
+      case _ => false
+    } => 2
   }
 }
 
@@ -192,5 +197,5 @@ object 役 {
   def values(prevailing: 風牌, player: 風牌): List[役] =
     List(役牌(prevailing), 役牌(player), 役牌(白), 役牌(發), 役牌(中), 門前清自摸和, 断么九, 平和, 一盃口, 七対子, 混全帯么九, 対々和, 一気通貫, 三暗刻, 三槓子, 三色同刻, 三色同順, 混老頭, 小三元, 二盃口, 純全帯么九, 混一色, 清一色)
   def dependencies: Map[役, 役] =
-    Map(清一色 -> 混一色, 純全帯么九 -> 混全帯么九, 二盃口 -> 一盃口)
+    Map(清一色 -> 混一色, 純全帯么九 -> 混全帯么九, 二盃口 -> 一盃口, 二重立直 -> 立直)
 }
