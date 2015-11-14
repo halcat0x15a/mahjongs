@@ -28,8 +28,8 @@ object MahjongSpec extends Properties("Mahjongs") {
   property("parse") = Prop.forAll(hand) { melds =>
     val (closedMelds, openMelds) = melds.partition(_.isClosed)
     closedMelds.flatMap(_.tiles) match {
-      case winningTile :: closedTiles => Mahjongs(winningTile, closedTiles, openMelds, true, true, true, East, East, 0).hands.nonEmpty
       case Nil => false
+      case winningTile :: closedTiles => Mahjongs(winningTile, closedTiles, openMelds, true, true, true, East, East, 0).hands.nonEmpty
     }
   }
 
