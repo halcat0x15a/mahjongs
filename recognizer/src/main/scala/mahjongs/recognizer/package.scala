@@ -4,6 +4,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Buffer
 
 import org.opencv.core._
+import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 
 package object recognizer {
@@ -52,12 +53,10 @@ package object recognizer {
     for (contour <- findContours(threshold(mat.clone, false))) yield {
       val patch = new Mat
       val rect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray: _*))
-      if (rect.angle < -45) {
-        rect.angle += 90
-        rect.size = new Size(rect.size.height, rect.size.width)
-      }
+      println(rect)
       Imgproc.warpAffine(mat, patch, Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1), mat.size)
       Imgproc.getRectSubPix(patch, rect.size, rect.center, patch)
+      if (rect.angle <= -45) Core.flip(patch.t, patch, 0)
       (patch, contour)
     }
   }
@@ -73,5 +72,29 @@ package object recognizer {
     Core.flip(mat, m, code)
     m
   }
+
+  def resize(mat: Mat, max: Int): Mat = {
+    val r = math.sqrt(mat.rows * mat.cols / max.toDouble)
+    if (r > 1) Imgproc.resize(mat, mat, new Size(mat.size.width / r, mat.size.height / r))
+    mat
+  }
+
+  def center(mat: Mat): Point =
+    new Point(mat.size.width / 2, mat.size.height / 2)
+
+  def center(rect: Rect): Point =
+    new Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
+
+  def toMat(bytes: Array[Byte], gray: Boolean): Mat =
+    Imgcodecs.imdecode(new MatOfByte(bytes: _*), if (gray) Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE else Imgcodecs.CV_LOAD_IMAGE_COLOR)
+
+  def fromMat(mat: Mat): Array[Byte] = {
+    val buf = new MatOfByte
+    Imgcodecs.imencode(".png", mat, buf)
+    buf.toArray
+  }
+
+  def intersects(a: Rect, b: Rect): Boolean =
+    math.max(a.x, b.x) < math.min(a.x + a.width, b.x + b.width) && math.max(a.y, b.y) < math.min(a.y + a.height, b.y + b.height)
 
 }

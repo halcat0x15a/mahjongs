@@ -1,20 +1,20 @@
 package mahjongs
 
-sealed trait Score {
+sealed trait Win {
 
   def point: Int
 
 }
 
-case class Discard(point: Int) extends Score
+case class Discard(point: Int) extends Win
 
-case class SelfDrawn(dealer: Int, others: Int) extends Score {
+case class SelfDrawn(dealer: Int, others: Int) extends Win {
 
   lazy val point = dealer + others * 2
 
 }
 
-case class DealerSelfDrawn(others: Int) extends Score {
+case class DealerSelfDrawn(others: Int) extends Win {
 
   lazy val point = others * 3
 

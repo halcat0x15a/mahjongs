@@ -79,10 +79,40 @@ object OpenMelds extends MeldApi {
 
   val isClosed: Boolean = false
 
+  def parse(tiles: List[Tile]): Option[Meld] =
+    if (tiles.distinct.size == 1) {
+      if (tiles.size == 3)
+        Some(Triplet(tiles.head))
+      else if (tiles.size == 3)
+        Some(Quad(tiles.head))
+      else
+        None
+    } else {
+      tiles match {
+        case (num@Num(s1, n1)) :: Num(s2, n2) :: Num(s3, n3) :: Nil if s1 == s2 && s2 == s3 && n1 + 1 == n2 && n2 + 1 == n3 => Some(Sequence(num))
+        case _ => None
+      }
+    }
+
 }
 
 object ClosedMelds extends MeldApi {
 
   val isClosed: Boolean = true
+
+  def parse(tiles: List[Tile]): Option[Meld] =
+    if (tiles.distinct.size == 1) {
+      if (tiles.size == 3)
+        Some(Triplet(tiles.head))
+      else if (tiles.size == 3)
+        Some(Quad(tiles.head))
+      else
+        None
+    } else {
+      tiles match {
+        case (num@Num(s1, n1)) :: Num(s2, n2) :: Num(s3, n3) :: Nil if s1 == s2 && s2 == s3 && n1 + 1 == n2 && n2 + 1 == n3 => Some(Sequence(num))
+        case _ => None
+      }
+    }
 
 }

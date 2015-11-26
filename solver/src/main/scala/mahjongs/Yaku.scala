@@ -24,7 +24,7 @@ trait YakuApi { self: FuApi =>
 
   lazy val isOpen: Boolean = !isClosed
 
-  lazy val allYaku: List[Yaku] = List(ドラ, 場風, 自風, 白, 發, 中, 門前清自摸和, 海底摸月, 河底撈魚, 平和, 断么九, 一盃口, 七対子, 混全帯么九, 対々和, 一気通貫, 三暗刻, 三槓子, 三色同刻, 三色同順, 混老頭, 小三元, 二盃口, 純全帯么九, 混一色, 清一色)
+  lazy val allYaku: List[Yaku] = List(ドラ, 場風, 自風, 白, 發, 中, 門前清自摸和, 海底摸月, 河底撈魚, 平和, 断么九, 一盃口, 七対子, 混全帯么九, 対々和, 一気通貫, 三暗刻, 三槓子, 三色同刻, 三色同順, 混老頭, 小三元, 二盃口, 純全帯么九, 混一色, 清一色, 国士無双, 四暗刻, 大三元, 字一色, 小四喜, 大四喜, 緑一色, 清老頭, 四槓子, 九蓮宝燈)
 
   def 喰い下がり(n: Int): Int = if (isClosed) n else n - 1
 
@@ -141,7 +141,7 @@ trait YakuApi { self: FuApi =>
 
   case object 小三元 extends Yaku {
     val han: Int = 2
-    lazy val isDefined: Boolean = tiles.count(Dragon.values.contains) >= 8
+    lazy val isDefined: Boolean = melds.count(_.tile.isDragon) == 3 && !七対子.isDefined
   }
 
   case object 二盃口 extends Yaku {
@@ -162,6 +162,60 @@ trait YakuApi { self: FuApi =>
   case object 清一色 extends Yaku {
     val han: Int = 喰い下がり(6)
     lazy val isDefined: Boolean = Suit.values.exists(suit => tiles.forall(tile => (1 to 9).exists(n => Num(suit, n) == tile)))
+  }
+
+  case object 国士無双 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = (Wind.values ++ Dragon.values ++ Vector(Num(Wan, 1), Num(Wan, 9), Num(Pin, 1), Num(Pin, 9), Num(Sou, 1), Num(Sou, 9))).forall(tiles.contains)
+  }
+
+  case object 四暗刻 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = closedMelds.count(_.isTriplet) == 4
+  }
+
+  case object 大三元 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = 白.isDefined && 發.isDefined && 中.isDefined
+  }
+
+  case object 字一色 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = tiles.forall(_.isHonor)
+  }
+
+  case object 小四喜 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = melds.count(_.tile.isWind) == 4 && !七対子.isDefined
+  }
+
+  case object 大四喜 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = Wind.values.forall(wind => melds.exists(meld => meld.isTriplet && meld.tile == wind))
+  }
+
+  case object 緑一色 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = tiles.forall(_.isGreen)
+  }
+
+  case object 清老頭 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = tiles.forall(_.isTerminal)
+  }
+
+  case object 四槓子 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean = melds.forall(_.isQuad)
+  }
+
+  case object 九蓮宝燈 extends Yaku {
+    val han: Int = 13
+    lazy val isDefined: Boolean =
+      Suit.values.exists { suit =>
+        val diff = tiles.diff(Vector.fill(3)(Num(suit, 1)) ++ (2 to 8).map(Num(suit, _)) ++ Vector.fill(3)(Num(suit, 9)))
+        (1 to 9).map(Num(suit, _)).exists(num => Vector(num) == diff)
+      }
   }
 
 }

@@ -47,7 +47,7 @@ trait FuApi {
           case Wait.嵌張 | Wait.辺張 | Wait.単騎 => 2
           case _ => 0
         }
-      override def toString: String = wait.toString
+      override def toString: String = waiting.toString
     }
 
   def fu(meld: Meld): Fu =

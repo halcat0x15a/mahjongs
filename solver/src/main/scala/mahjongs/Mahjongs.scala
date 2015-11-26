@@ -3,14 +3,25 @@ package mahjongs
 case class Mahjongs(
   winningTile: Tile,
   closedTiles: List[Tile],
-  openMelds: List[Meld],
+  openTiles: List[(Boolean, List[Tile])],
   isDealer: Boolean,
   isSelfDrawn: Boolean,
   isLast: Boolean,
   seatWind: Wind,
   prevailingWind: Wind,
   dora: Int
-) extends MahjongApi with HandApi
+) extends MahjongApi with HandApi {
+
+  lazy val openMelds: List[Meld] =
+    openTiles.flatMap {
+      case (closed, tiles) =>
+        if (closed)
+          ClosedMelds.parse(tiles).toList
+        else
+          OpenMelds.parse(tiles).toList
+    }
+
+}
 
 trait MahjongApi {
 

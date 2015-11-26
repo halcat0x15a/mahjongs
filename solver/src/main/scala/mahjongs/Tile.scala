@@ -19,6 +19,12 @@ sealed trait Tile {
 
   lazy val isOrphan: Boolean = isHonor || isTerminal
 
+  lazy val isGreen: Boolean =
+    this match {
+      case Num(Sou, 2 | 3 | 4 | 6 | 8) => true
+      case _ => false
+    }
+
   lazy val unicode: String =
     this match {
       case Num(Wan, n) => s"\ud83c${(n + 0xdc06).toChar}"
