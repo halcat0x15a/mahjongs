@@ -87,9 +87,8 @@ var Result = React.createClass({
         data: this.props.data,
         dealer: this.refs.dealer.checked,
         selfdrawn: this.refs.selfdrawn.checked,
-        lastchance: this.refs.lastchance.checked,
         seat: parseInt(this.refs.seat.value),
-        prevailing: parseInt(this.refs.prevailing.value),
+        round: parseInt(this.refs.round.value),
         dora: parseInt(this.refs.dora.value)
       }),
       contentType: 'application/json',
@@ -112,11 +111,6 @@ var Result = React.createClass({
               <input ref="selfdrawn" type="checkbox" /> 自摸
             </label>
           </div>
-          <div className="checkbox">
-            <label>
-              <input ref="lastchance" type="checkbox" /> 海底
-            </label>
-          </div>
           <label htmlFor="seat">自風</label>
           <select ref="seat" className="form-control" name="seat">
             <option value="0">東</option>
@@ -124,8 +118,8 @@ var Result = React.createClass({
             <option value="2">西</option>
             <option value="3">北</option>
           </select>
-          <label htmlFor="prevailing">場風</label>
-          <select ref="prevailing" className="form-control" name="prevailing">
+          <label htmlFor="round">場風</label>
+          <select ref="round" className="form-control" name="round">
             <option value="0">東</option>
             <option value="1">南</option>
             <option value="2">西</option>

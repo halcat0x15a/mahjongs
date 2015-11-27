@@ -2,7 +2,7 @@ package mahjongs.solver
 
 import scala.collection.breakOut
 
-sealed trait Suit
+sealed abstract class Suit
 
 case object Wan extends Suit
 
@@ -10,58 +10,78 @@ case object Pin extends Suit
 
 case object Sou extends Suit
 
-sealed trait Tile {
+object Suit {
+
+  val values: Vector[Suit] = Vector(Wan, Pin, Sou)
+
+}
+
+sealed abstract class Tile {
 
   lazy val index: Int = Tile.values.indexOf(this)
 
-  lazy val isTerminal: Boolean =
+  val isNumber: Boolean = isInstanceOf[Num]
+
+  val isWind: Boolean = isInstanceOf[Wind]
+
+  val isDragon: Boolean = isInstanceOf[Dragon]
+
+  val isHonor: Boolean = isWind || isDragon
+
+  val isTerminal: Boolean =
     this match {
-      case Num(_, number) => number == 1 || number == 9
+      case Num(_, 1 | 9) => true
       case _ => false
     }
 
-  lazy val isNumber: Boolean = isInstanceOf[Num]
-
-  lazy val isHonor: Boolean = !isNumber
-
-  lazy val isOrphan: Boolean = isTerminal || isHonor
-
-  lazy val isDragon: Boolean = this == White || this == Green || this == Red
+  val isOrphan: Boolean = isTerminal || isHonor
 
 }
 
 case class Num(suit: Suit, number: Int) extends Tile
 
-case object East extends Tile
+object Num {
 
-case object South extends Tile
+  val values: Vector[Num] =
+    for {
+      suit <- Suit.values
+      n <- 1 to 9
+    } yield Num(suit, n)
 
-case object West extends Tile
+}
 
-case object North extends Tile
+sealed abstract class Wind extends Tile
 
-case object White extends Tile
+case object East extends Wind
 
-case object Green extends Tile
+case object South extends Wind
 
-case object Red extends Tile
+case object West extends Wind
+
+case object North extends Wind
+
+object Wind {
+
+  val values: Vector[Wind] = Vector(East, South, West, North)
+
+}
+
+sealed abstract class Dragon extends Tile
+
+case object White extends Dragon
+
+case object Green extends Dragon
+
+case object Red extends Dragon
+
+object Dragon {
+
+  val values: Vector[Dragon] = Vector(White, Green, Red)
+
+}
 
 object Tile {
 
-  val suit: Vector[Suit] = Vector(Wan, Pin, Sou)
-
-  val wan: Vector[Num] = (1 to 9).map(Num(Wan, _))(breakOut)
-
-  val pin: Vector[Num] = (1 to 9).map(Num(Pin, _))(breakOut)
-
-  val sou: Vector[Num] = (1 to 9).map(Num(Sou, _))(breakOut)
-
-  val num: Vector[Num] = wan ++ pin ++ sou
-
-  val wind: Vector[Tile] = Vector(East, South, West, North)
-
-  val dragon: Vector[Tile] = Vector(White, Green, Red)
-
-  val values: Vector[Tile] = num ++ wind ++ dragon
+  val values: Vector[Tile] = Num.values ++ Wind.values ++ Dragon.values
 
 }

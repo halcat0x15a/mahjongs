@@ -14,13 +14,19 @@ sealed abstract class Meld {
       case _ => false
     }
 
-  val isPair: Boolean = isInstanceOf[Toitsu]
-
   val isSeq: Boolean = isInstanceOf[Shuntsu]
 
-  val isTriplet: Boolean = isInstanceOf[Kotsu]
-
   val isQuad: Boolean = isInstanceOf[Kantsu]
+
+  val isTriplet: Boolean = isInstanceOf[Kotsu] || isQuad
+
+  val isPair: Boolean = isInstanceOf[Toitsu]
+
+  lazy val isTerminal: Boolean =
+    this match {
+      case Shuntsu(Num(_, 1 | 7), _) => true
+      case _ => tile.isTerminal
+    }
 
 }
 
@@ -61,24 +67,17 @@ object Meld {
     }
 
   def parse(tiles: List[Tile], isClosed: Boolean): Option[Meld] =
-    if (tiles.distinct.size == 1) {
-      if (tiles.size == 3)
-        Some(Kotsu(tiles.head, isClosed))
-      else if (tiles.size == 4)
-        Some(Kantsu(tiles.head, isClosed))
-      else
-        None
-    } else if (tiles.forall(_.isNumber)) {
-      tiles.collect { case num@Num(_, _) => num }.sortBy(_.number).headOption.map(Shuntsu(_, isClosed))
-    } else {
-      None
+    tiles.sortBy(_.index) match {
+      case a :: b :: c :: Nil if a == b && b == c => Some(Kotsu(a, isClosed))
+      case a :: b :: c :: d :: Nil if a == b && b == c && c == d => Some(Kantsu(a, isClosed))
+      case (tile@Num(a, x)) :: Num(b, y) :: Num(c, z) :: Nil if a == b && b == c && x == y - 1 && y == z - 1 => Some(Shuntsu(tile, isClosed))
+      case _ => None
     }
-
  
-  def fu(meld: Meld, seatWind: Tile, prevailingWind: Tile): Int =
+  def fu(meld: Meld, situation: Situation): Int =
     meld match {
-      case Toitsu(tile) if tile == seatWind && tile == prevailingWind => 4
-      case Toitsu(tile) if tile == seatWind || tile == prevailingWind || Tile.dragon.contains(tile) => 2
+      case Toitsu(tile) if tile == situation.seatWind && tile == situation.roundWind => 4
+      case Toitsu(tile) if situation.isHonor(tile) => 2
       case Toitsu(_) => 0
       case Shuntsu(_, _) => 0
       case Kotsu(tile, true) if tile.isOrphan => 8

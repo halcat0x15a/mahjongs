@@ -21,10 +21,10 @@ object Wait {
     } else {
       meld match {
         case Toitsu(_) => Some(Tanki)
-        case Kotsu(_, _) => Some(Shanpon)
-        case Shuntsu(Num(_, _), _) if index == 1 => Some(Kanchan)
-        case Shuntsu(Num(_, n), _) if n == 1 && index == 2 || n == 7 && index == 0 => Some(Penchan)
-        case Shuntsu(Num(_, _), _) => Some(Ryanmen)
+        case Kotsu(_, true) => Some(Shanpon)
+        case Shuntsu(Num(_, _), true) if index == 1 => Some(Kanchan)
+        case Shuntsu(Num(_, n), true) if n == 1 && index == 2 || n == 7 && index == 0 => Some(Penchan)
+        case Shuntsu(Num(_, _), true) => Some(Ryanmen)
         case _ => None
       }
     }

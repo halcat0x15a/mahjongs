@@ -22,16 +22,17 @@ case class DealerTsumo(nonDealers: Int) extends Win {
 
 object Win {
 
-  def calc(fu: Int, han: Int, isDealer: Boolean, isSelfDrawn: Boolean): Win = calc(basicPoints(fu, han), isDealer, isSelfDrawn)
+  def calc(fu: Int, han: Int, situation: Situation): Win =
+    calc(basicPoints(fu, han), situation)
 
-  def calc(basicPoints: Int, isDealer: Boolean, isSelfDrawn: Boolean): Win =
-    if (isSelfDrawn) {
-      if (isDealer)
+  def calc(basicPoints: Int, situation: Situation): Win =
+    if (situation.isSelfDrawn) {
+      if (situation.isDealer)
         DealerTsumo(ceil(basicPoints * 2))
       else
         NonDealerTsumo(ceil(basicPoints * 2), ceil(basicPoints))
     } else {
-      if (isDealer)
+      if (situation.isDealer)
         Ron(ceil(basicPoints * 6))
       else
         Ron(ceil(basicPoints * 4))
@@ -51,6 +52,7 @@ object Win {
     else
       math.min(fu * math.pow(2, han + 2).toInt, 2000)
 
-  private def ceil(points: Double): Int = (math.ceil(points / 100) * 100).toInt
+  def ceil(points: Double): Int =
+    (math.ceil(points / 100) * 100).toInt
 
 }

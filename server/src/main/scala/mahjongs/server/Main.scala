@@ -34,8 +34,8 @@ object Main extends App {
   case class RecognitionResult(closed: List[Int], open: List[List[Int]])
   implicit val recognitionResultFormat = jsonFormat2(RecognitionResult)
 
-  case class CalculationData(data: RecognitionResult, dealer: Boolean, selfdrawn: Boolean, lastchance: Boolean, seat: Int, prevailing: Int, dora: Int)
-  implicit val calculationDataFormat = jsonFormat7(CalculationData)
+  case class CalculationData(data: RecognitionResult, dealer: Boolean, selfdrawn: Boolean, seat: Int, round: Int, dora: Int)
+  implicit val calculationDataFormat = jsonFormat6(CalculationData)
 
   case class CalculationResult(han: Int, fu: Int, yaku: List[String], point: String)
   implicit val calculationResultFormat = jsonFormat4(CalculationResult)
@@ -75,22 +75,24 @@ object Main extends App {
       }
     } ~ path("calculate") {
       entity(as[CalculationData]) {
-        case CalculationData(RecognitionResult(closed, open), dealer, selfdrawn, lastchance, seat, prevailing, dora) =>
+        case CalculationData(RecognitionResult(closed, open), dealer, selfdrawn, seat, round, dora) =>
         complete {
           val tiles = closed.map(Tile.values)
-          val openTiles = open.flatMap { indices =>
+          val openMelds = open.flatMap { indices =>
             if (indices.size == 4 && indices.contains(34))
               Meld.parse(indices.find(_ != 34).toList.flatMap(index => List.fill(4)(Tile.values(index))), true)
             else
               Meld.parse(indices.map(Tile.values), false)
           }
-          val hand = Hand.calc(tiles.last, tiles.init, openTiles, dealer, selfdrawn, Tile.wind(seat), Tile.wind(prevailing), dora)
-          val detail = hand.score match {
-            case Ron(_) => ""
-            case NonDealerTsumo(dealer, others) => s"($others/$dealer)"
-            case DealerTsumo(others) => s"($others)"
+          println(tiles, openMelds)
+          Hand.calc(tiles.last, tiles.init, openMelds, Situation(dealer, selfdrawn, Wind.values(seat), Wind.values(round), dora)).map { hand =>
+            val detail = hand.win match {
+              case Ron(_) => ""
+              case NonDealerTsumo(dealer, others) => s"($others/$dealer)"
+              case DealerTsumo(others) => s"($others)"
+            }
+            CalculationResult(hand.han, hand.fu, hand.yaku.map(_.name)(collection.breakOut), s"${hand.win.points}$detail")
           }
-          CalculationResult(hand.han, hand.fu, hand.yaku.map(_.name)(collection.breakOut), s"${hand.score.points}$detail")
         }
       }
     } ~ pathPrefix("") {
