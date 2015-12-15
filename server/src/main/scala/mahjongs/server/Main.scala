@@ -98,7 +98,7 @@ object Main extends App {
       }
     }
 
-  val binding = Http().bindAndHandle(route, "0.0.0.0", 8080)
+  val binding = Http().bindAndHandle(route, "0.0.0.0", sys.env.getOrElse("PORT", "8080").toInt)
 
   println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
   scala.io.StdIn.readLine()
