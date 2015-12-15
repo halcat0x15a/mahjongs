@@ -9,13 +9,13 @@ import org.opencv.imgproc.Imgproc
 
 package object recognizer {
 
-  for {
-    ext <- sys.props("os.name").toLowerCase match {
-      case name if name.contains("nux") => Some("so")
-      case name if name.contains("mac") => Some("dylib")
-      case _ => None
-    }
-  } System.load(getClass.getResource(s"/libopencv_java300.$ext").getPath)
+  locally {
+    val name = sys.props("os.name").toLowerCase
+    val ext = if (name.contains("linux")) "so" else if (name.contains("mac")) "dylib" else ""
+    val file = getClass.getProtectionDomain.getCodeSource.getLocation.getPath
+    val dir = if (file.endsWith(".jar")) file.substring(0, file.lastIndexOf('/')) else file
+    System.load(s"$dir/libopencv_java300.$ext")
+  }
 
   def findContours(mat: Mat): Buffer[MatOfPoint] = {
     val contours = Buffer.empty[MatOfPoint]
