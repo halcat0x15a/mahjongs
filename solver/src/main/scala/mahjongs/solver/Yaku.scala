@@ -159,10 +159,7 @@ case object Junchantaiyao extends Yaku("純全帯么九") {
 
   def apply(hand: Hand): Int = if (hand.isClosed) 3 else 2
 
-  def isDefinedAt(hand: Hand): Boolean = {
-    println(hand.melds)
-    hand.melds.forall(_.isTerminal)
-  }
+  def isDefinedAt(hand: Hand): Boolean = hand.melds.forall(_.isTerminal)
 
 }
 

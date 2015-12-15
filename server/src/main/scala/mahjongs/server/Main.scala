@@ -40,8 +40,6 @@ object Main extends App {
   def decode(data: String): Array[Byte] =
     Base64.getMimeDecoder.decode(data.substring(data.indexOf(',') + 1))
 
-  loadLibrary()
-
   implicit val system: ActorSystem = ActorSystem()
 
   implicit val materializer: ActorMaterializer = ActorMaterializer()

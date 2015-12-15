@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
   scalacOptions += "-deprecation"
 )
 
-lazy val root = project in file(".") aggregate (solver, recognizer)
+lazy val root = project in file(".") aggregate (solver, recognizer, server)
 
 lazy val solver = project in file("solver") settings (commonSettings: _*)
 
