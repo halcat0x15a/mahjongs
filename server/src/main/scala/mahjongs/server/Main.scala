@@ -2,9 +2,6 @@ package mahjongs.server
 
 import java.util.Base64
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
@@ -102,8 +99,7 @@ object Main extends App {
   val binding = Http().bindAndHandle(route, "0.0.0.0", port)
 
   println(s"Server online at http://0.0.0.0:$port/\nPress RETURN to stop...")
-  scala.io.StdIn.readLine()
-  binding.flatMap(_.unbind()).onComplete(_ => system.shutdown())
-  //Await.ready(binding, Duration.Inf)
+  //scala.io.StdIn.readLine()
+  //binding.flatMap(_.unbind()).onComplete(_ => system.shutdown())
 
 }
