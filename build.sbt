@@ -16,6 +16,7 @@ lazy val root = project in file(".") settings (commonSettings: _*) settings (
 lazy val solver = project in file("solver") settings (commonSettings: _*)
 
 lazy val recognizer = project in file("recognizer") settings (commonSettings: _*) settings (
+  unmanagedResourceDirectories in Compile += baseDirectory.value / "lib",
   fork in Test := true
 )
 
