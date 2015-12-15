@@ -6,4 +6,14 @@ case class Situation(isDealer: Boolean, isSelfDrawn: Boolean, seatWind: Wind, ro
 
   def isDoubleWind(tile: Tile): Boolean = tile == seatWind && tile == roundWind
 
+  def fu(isClosed: Boolean): Int =
+    if (isClosed) {
+      if (isSelfDrawn)
+        2
+      else
+        10
+    } else {
+      0
+    }
+
 }

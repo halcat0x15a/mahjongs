@@ -44,6 +44,7 @@ var Form = React.createClass({
       this.refs.canvas.height = height;
       var ctx = this.refs.canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, width, height);
+      this.imageData = ctx.getImageData(0, 0, width, height);
       this.postJSON();
     }.bind(this);
     img.src = src;
@@ -63,7 +64,7 @@ var Form = React.createClass({
       <form onChange={this.handleChange}>
         <label htmlFor="file">{this.props.label}</label>
         <input ref="file" type="file" name="file" capture="camera" />
-        <p className="help-block">Image: <canvas ref="canvas" className="img-responsive" /></p>
+        <p className="help-block">Image:<canvas ref="canvas" className="img-responsive" /></p>
       </form>
     );
   }

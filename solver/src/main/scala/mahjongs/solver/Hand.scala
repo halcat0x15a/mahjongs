@@ -22,14 +22,28 @@ case class Hand(waiting: Wait, closedMelds: List[Meld], openMelds: List[Meld], s
     else if (isSevenPairs)
       25
     else
-      20 + waiting.fu + melds.map(Meld.fu(_, situation)).sum
+      20 + waiting.fu + melds.map(Meld.fu(_, situation)).sum + situation.fu(isClosed)
 
   val yaku: Vector[Yaku] =
     Yaku.values.filter(_.isDefinedAt(this))
 
   val han: Int = yaku.map(_(this)).sum
 
-  val win: Win = Win.calc(fu, han, situation)
+  val points: Int = fu * math.pow(2, han + 2).toInt
+
+  val basicPoints: Int =
+    if (han >= 13)
+      8000
+    else if (han >= 11)
+      6000
+    else if (han >= 8)
+      4000
+    else if (han >= 6)
+      3000
+    else
+      math.min(points, 2000)
+
+  val win: Win = Win.calc(basicPoints, situation)
 
 }
 
@@ -41,7 +55,7 @@ object Hand {
       case closed if closed.size + melds.size == 5 =>
         closed.flatMap { meld => Wait.calc(tile, meld) }.map(Hand(_, closed, melds, situation))
     }.flatten
-    if (hands.isEmpty) None else Some(hands.maxBy(_.win.points))
+    if (hands.isEmpty) None else Some(hands.maxBy(_.points))
   }
 
   def set(histgram: Vector[Int], size: Int): Iterator[(Meld, Vector[Int])] =

@@ -37,7 +37,7 @@ object TemplateMatching {
             Imgproc.getRectSubPix(tile, size, rect.fold(center(tile))(center), tile)
             tile
         }
-    }.take(35)
+    }.take(34)
     (tiles, new Size(width, height))
   }
 
@@ -58,15 +58,15 @@ object TemplateMatching {
           val rect = new Rect(loc.maxLoc, tile.size)
           if (rects.forall(pair => !intersects(rect, pair._2))) {
             Imgproc.rectangle(hand, rect.tl, rect.br, new Scalar(0), -1)
-            println(i, loc.maxVal)
-            go((i % 35, rect) :: rects)
+            Imgcodecs.imwrite(s"hand${rects.size}.png", hand)
+            go((i % 34, rect) :: rects)
           } else {
             Imgcodecs.imwrite("hand_result.png", hand)
             rects
           }
         }
         val indices = go(Nil).sortBy(_._2.x).map(_._1)
-        (edge == 4 && !indices.contains(34), indices)
+        (edge == 4 && indices.size != 4, indices)
     }.groupBy(_._1).mapValues(_.map(_._2))
     (result(true)(0), result.get(false).toList.flatten)
   }

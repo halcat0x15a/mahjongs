@@ -79,12 +79,11 @@ object Main extends App {
         complete {
           val tiles = closed.map(Tile.values)
           val openMelds = open.flatMap { indices =>
-            if (indices.size == 4 && indices.contains(34))
-              Meld.parse(indices.find(_ != 34).toList.flatMap(index => List.fill(4)(Tile.values(index))), true)
+            if (indices.size == 4 && indices(0) == 31 && indices(3) == 31 && indices(1) == indices(2))
+              Some(Kantsu(Tile.values(indices(1)), true))
             else
               Meld.parse(indices.map(Tile.values), false)
           }
-          println(tiles, openMelds)
           Hand.calc(tiles.last, tiles.init, openMelds, Situation(dealer, selfdrawn, Wind.values(seat), Wind.values(round), dora)).map { hand =>
             val detail = hand.win match {
               case Ron(_) => ""

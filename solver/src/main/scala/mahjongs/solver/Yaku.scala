@@ -21,7 +21,7 @@ case object Yakuhai extends Yaku("役牌") {
     }.sum
 
   def isDefinedAt(hand: Hand): Boolean =
-    hand.isClosed && hand.situation.isSelfDrawn
+    hand.melds.exists(meld => meld.isTriplet && (hand.situation.isDoubleWind(meld.tile) || hand.situation.isHonor(meld.tile)))
 
 }
 
@@ -159,8 +159,10 @@ case object Junchantaiyao extends Yaku("純全帯么九") {
 
   def apply(hand: Hand): Int = if (hand.isClosed) 3 else 2
 
-  def isDefinedAt(hand: Hand): Boolean =
+  def isDefinedAt(hand: Hand): Boolean = {
+    println(hand.melds)
     hand.melds.forall(_.isTerminal)
+  }
 
 }
 
