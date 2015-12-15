@@ -49,9 +49,11 @@ case class Hand(waiting: Wait, closedMelds: List[Meld], openMelds: List[Meld], s
 
 object Hand {
 
+  def histgram(tiles: Seq[Tile]): Vector[Int] =
+    tiles.foldLeft(Vector.fill(34)(0))((histgram, tile) => histgram.updated(tile.index, histgram(tile.index) + 1))
+
   def calc(tile: Tile, tiles: Seq[Tile], melds: List[Meld], situation: Situation): Option[Hand] = {
-    val histgram = (tile +: tiles).foldLeft(Vector.fill(34)(0))((histgram, tile) => histgram.updated(tile.index, histgram(tile.index) + 1))
-    val hands = parse(histgram).collect {
+    val hands = parse(histgram(tile +: tiles)).collect {
       case closed if closed.size + melds.size == 5 =>
         closed.flatMap { meld => Wait.calc(tile, meld) }.map(Hand(_, closed, melds, situation))
     }.flatten

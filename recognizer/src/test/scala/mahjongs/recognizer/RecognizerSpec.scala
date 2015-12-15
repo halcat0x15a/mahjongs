@@ -1,27 +1,24 @@
 package mahjongs.recognizer
 
-import java.nio.file.{Paths, Files}
-import java.util.ArrayList
+import org.scalatest.FunSuite
 
-import scala.collection.JavaConverters._
+class RecognizerSpec extends FunSuite {
 
-import org.scalatest.FunSpec
+  val tile = read("../server/src/main/resources/public/tile.jpg", true)
+  val hand = read("../server/src/main/resources/public/hand.jpg", true)
 
-import org.opencv.core._
-import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
-import org.opencv.utils.Converters
+  test("A sample of tile image should be template") {
+    assert(TemplateMatching.createTemplate(tile).isDefined)
+  }
 
-class RecognizerSpec extends FunSpec {
-
-  System.load(getClass.getResource(s"/libopencv_java300.dylib").getPath)
-
-  describe("Recognizer") {
-    val images = Files.list(Paths.get(getClass.getResource(s"/train").toURI)).iterator.asScala.map(path => Imgcodecs.imread(path.toString, Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE)).toVector
-    new NeuralNetwork(images ++ Files.list(Paths.get(getClass.getResource(s"/sample").toURI)).iterator.asScala.map(path => Imgcodecs.imread(path.toString, Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE)))
-    val nn = new NeuralNetwork(images)
-    for (sample <- Files.list(Paths.get(getClass.getResource(s"/sample").toURI)).iterator.asScala.map(path => Imgcodecs.imread(path.toString, Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE)))
-      println(nn.predict(sample).toArray.zipWithIndex.maxBy(_._1))
+  test("A sample of hand image should have 14 tiles") {
+    assert {
+      TemplateMatching.createTemplate(tile).exists {
+        case (templates, size) =>
+          val (closed, open) = TemplateMatching.recognize(hand, templates, size.width.toInt, size.height.toInt)
+          closed.size == 14 && open.isEmpty
+      }
+    }
   }
 
 }

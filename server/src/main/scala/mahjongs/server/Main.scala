@@ -11,11 +11,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model._
-import akka.util.ByteString
 
 import spray.json._, DefaultJsonProtocol._
-
-import org.opencv.core._
 
 import mahjongs.solver._
 import mahjongs.recognizer._
@@ -43,10 +40,11 @@ object Main extends App {
   def decode(data: String): Array[Byte] =
     Base64.getMimeDecoder.decode(data.substring(data.indexOf(',') + 1))
 
-  System.load(getClass.getResource(s"/libopencv_java300.dylib").getPath)
+  loadLibrary()
 
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem = ActorSystem()
+
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   import system.dispatcher
 
@@ -56,13 +54,15 @@ object Main extends App {
     } ~ path("train") {
       entity(as[TrainingData]) {
         case TrainingData(data) =>
-          val (images, size) = TemplateMatching.createTemplate(toMat(decode(data), true))
           complete {
-            TrainingResult(
-              images.map(image => Base64.getMimeEncoder.encodeToString(fromMat(image)))(collection.breakOut),
-              size.width.toInt,
-              size.height.toInt
-            )
+            TemplateMatching.createTemplate(toMat(decode(data), true)).map {
+              case (images, size) =>
+                TrainingResult(
+                  images.map(image => Base64.getMimeEncoder.encodeToString(fromMat(image)))(collection.breakOut),
+                  size.width.toInt,
+                  size.height.toInt
+                )
+            }
           }
       }
     } ~ path("recognize") {

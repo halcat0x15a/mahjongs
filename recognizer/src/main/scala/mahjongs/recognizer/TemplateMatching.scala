@@ -1,51 +1,47 @@
 package mahjongs.recognizer
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable.Buffer
-
 import org.opencv.core._
-import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 
 object TemplateMatching {
 
   val MaxResolution: Int = 1024 * 1024
 
-  def createTemplate(mat: Mat): (IndexedSeq[Mat], Size) = {
-    val template = crop(resize(mat, MaxResolution)).head._1
-    Imgcodecs.imwrite("template.png", template)
-    val mask = threshold(template.clone, true)
-    val width = template.cols / 9
-    val height = template.rows / 4
-    floodFill(mask, (0 until 4).map(_ * height) :+ (mask.rows - 1), 0 until mask.cols)
-    floodFill(mask, 0 until mask.rows, (0 until 9).map(_ * width) :+ (mask.cols - 1))
-    Imgproc.dilate(mask, mask, new Mat)
-    Imgcodecs.imwrite("template_mask.png", mask)
-    val rects = for (tiles <- grid(mask, 4, 9)) yield
-      for (tile <- tiles) yield {
-        val contours = findContours(tile.clone).flatMap(_.toArray)
-        if (contours.length > 0)
-          Some(convexHull(contours))
-        else
-          None
-      }
-    val size = rects.flatten.flatten.map(_.size).maxBy(_.area)
-    val tiles = grid(template, 4, 9).zip(rects).flatMap {
-      case (tiles, rects) =>
-        tiles.zip(rects).map {
-          case (tile, rect) =>
-            Imgproc.getRectSubPix(tile, size, rect.fold(center(tile))(center), tile)
-            tile
+  def createTemplate(mat: Mat): Option[(IndexedSeq[Mat], Size)] = {
+    crop(resize(mat, MaxResolution)).headOption.map {
+      case (template, _) =>
+        val mask = threshold(template.clone, true)
+        val width = template.cols / 9
+        val height = template.rows / 4
+        floodFill(mask, (0 until 4).map(_ * height) :+ (mask.rows - 1), 0 until mask.cols)
+        floodFill(mask, 0 until mask.rows, (0 until 9).map(_ * width) :+ (mask.cols - 1))
+        Imgproc.dilate(mask, mask, new Mat)
+        val rects = for (tiles <- grid(mask, 4, 9)) yield {
+          for (tile <- tiles) yield {
+            val contours = findContours(tile.clone).flatMap(_.toArray)
+            if (contours.length > 0)
+              Some(convexHull(contours))
+            else
+              None
+          }
         }
-    }.take(34)
-    (tiles, new Size(width, height))
+        val size = rects.flatten.flatten.map(_.size).maxBy(_.area)
+        val tiles = grid(template, 4, 9).zip(rects).flatMap {
+          case (tiles, rects) =>
+            tiles.zip(rects).map {
+              case (tile, rect) =>
+                Imgproc.getRectSubPix(tile, size, rect.fold(center(tile))(center), tile)
+                tile
+            }
+        }.take(34)
+        (tiles, new Size(width, height))
+    }
   }
 
   def recognize(mat: Mat, templates: Seq[Mat], width: Int, height: Int): (Seq[Int], Seq[Seq[Int]]) = {
     val result = crop(resize(mat, MaxResolution)).collect {
       case (hand, contour) if hand.size.area > 0 =>
         Imgproc.resize(hand, hand, new Size(hand.size.width * height / hand.size.height, height))
-        Imgcodecs.imwrite(s"hand.png", hand)
         val edge = approxPoly(new MatOfPoint2f(contour.toArray: _*)).rows
         val tiles = templates ++ templates.map(m => flip(m.t, 0)) ++ templates.map(flip(_, -1)) ++ templates.map(m => flip(m.t, 1))
         def go(rects: List[(Int, Rect)]): List[(Int, Rect)] = {
@@ -58,10 +54,8 @@ object TemplateMatching {
           val rect = new Rect(loc.maxLoc, tile.size)
           if (rects.forall(pair => !intersects(rect, pair._2))) {
             Imgproc.rectangle(hand, rect.tl, rect.br, new Scalar(0), -1)
-            Imgcodecs.imwrite(s"hand${rects.size}.png", hand)
             go((i % 34, rect) :: rects)
           } else {
-            Imgcodecs.imwrite("hand_result.png", hand)
             rects
           }
         }

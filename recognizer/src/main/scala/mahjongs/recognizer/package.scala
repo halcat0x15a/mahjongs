@@ -9,6 +9,8 @@ import org.opencv.imgproc.Imgproc
 
 package object recognizer {
 
+  System.load(getClass.getResource(s"/libopencv_java300.dylib").getPath)
+
   def findContours(mat: Mat): Buffer[MatOfPoint] = {
     val contours = Buffer.empty[MatOfPoint]
     Imgproc.findContours(mat, contours.asJava, new Mat, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_TC89_KCOS)
@@ -53,7 +55,6 @@ package object recognizer {
     for (contour <- findContours(threshold(mat.clone, false))) yield {
       val patch = new Mat
       val rect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray: _*))
-      println(rect)
       Imgproc.warpAffine(mat, patch, Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1), mat.size)
       Imgproc.getRectSubPix(patch, rect.size, rect.center, patch)
       if (rect.angle <= -45) Core.flip(patch.t, patch, 0)
@@ -96,5 +97,8 @@ package object recognizer {
 
   def intersects(a: Rect, b: Rect): Boolean =
     math.max(a.x, b.x) < math.min(a.x + a.width, b.x + b.width) && math.max(a.y, b.y) < math.min(a.y + a.height, b.y + b.height)
+
+  def read(filename: String, gray: Boolean): Mat =
+    Imgcodecs.imread(filename, if (gray) Imgcodecs.IMREAD_GRAYSCALE else Imgcodecs.IMREAD_COLOR)
 
 }
