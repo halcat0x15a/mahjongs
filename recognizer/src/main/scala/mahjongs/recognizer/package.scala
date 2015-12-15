@@ -9,6 +9,8 @@ import org.opencv.imgproc.Imgproc
 
 package object recognizer {
 
+  println(sys.props("os.name"))
+
   for {
     ext <- sys.props("os.name").toLowerCase match {
       case name if name.contains("nix") => Some("so")
