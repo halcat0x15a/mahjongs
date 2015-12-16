@@ -63,31 +63,32 @@ object Main extends App {
     } ~ path("recognize") {
       entity(as[RecognitionData]) {
         case RecognitionData(data, TrainingResult(trainingData, width, height)) =>
-          val (closed, open) = TemplateMatching.recognize(toMat(decode(data), true), trainingData.map(data => toMat(decode(data), true)), width, height)
           complete {
-            RecognitionResult(closed.toList, open.map(_.toList)(collection.breakOut))
+            TemplateMatching.recognize(toMat(decode(data), true), trainingData.map(data => toMat(decode(data), true)), width, height).map {
+              case (closed, open) => RecognitionResult(closed.toList, open.map(_.toList)(collection.breakOut))
+            }
           }
       }
     } ~ path("calculate") {
       entity(as[CalculationData]) {
         case CalculationData(RecognitionResult(closed, open), dealer, selfdrawn, seat, round, dora) =>
-        complete {
-          val tiles = closed.map(Tile.values)
-          val openMelds = open.flatMap { indices =>
-            if (indices.size == 4 && indices(0) == 31 && indices(3) == 31 && indices(1) == indices(2))
-              Some(Kantsu(Tile.values(indices(1)), true))
-            else
-              Meld.parse(indices.map(Tile.values), false)
-          }
-          Hand.calc(tiles.last, tiles.init, openMelds, Situation(dealer, selfdrawn, Wind.values(seat), Wind.values(round), dora)).map { hand =>
-            val detail = hand.win match {
-              case Ron(_) => ""
-              case NonDealerTsumo(dealer, others) => s"($others/$dealer)"
-              case DealerTsumo(others) => s"($others)"
+          complete {
+            val tiles = closed.map(Tile.values)
+            val openMelds = open.flatMap { indices =>
+              if (indices.size == 4 && indices(0) == 31 && indices(3) == 31 && indices(1) == indices(2))
+                Some(Kantsu(Tile.values(indices(1)), true))
+              else
+                Meld.parse(indices.map(Tile.values), false)
             }
-            CalculationResult(hand.han, hand.fu, hand.yaku.map(_.name)(collection.breakOut), s"${hand.win.points}$detail")
+            Hand.calc(tiles.last, tiles.init, openMelds, Situation(dealer, selfdrawn, Wind.values(seat), Wind.values(round), dora)).map { hand =>
+              val detail = hand.win match {
+                case Ron(_) => ""
+                case NonDealerTsumo(dealer, others) => s"($others/$dealer)"
+                case DealerTsumo(others) => s"($others)"
+              }
+              CalculationResult(hand.han, hand.fu, hand.yaku.map(_.name)(collection.breakOut), s"${hand.win.points}$detail")
+            }
           }
-        }
       }
     } ~ pathPrefix("") {
       encodeResponse {

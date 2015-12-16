@@ -38,31 +38,35 @@ object TemplateMatching {
     }
   }
 
-  def recognize(mat: Mat, templates: Seq[Mat], width: Int, height: Int): (Seq[Int], Seq[Seq[Int]]) = {
-    val result = crop(resize(mat, MaxResolution)).collect {
-      case (hand, contour) if hand.size.area > 0 =>
-        Imgproc.resize(hand, hand, new Size(hand.size.width * height / hand.size.height, height))
-        val edge = approxPoly(new MatOfPoint2f(contour.toArray: _*)).rows
-        val tiles = templates ++ templates.map(m => flip(m.t, 0)) ++ templates.map(flip(_, -1)) ++ templates.map(m => flip(m.t, 1))
-        def go(rects: List[(Int, Rect)]): List[(Int, Rect)] = {
-          val locs = for (tile <- tiles) yield {
-            val result = new Mat
-            Imgproc.matchTemplate(hand, tile, result, Imgproc.TM_CCORR_NORMED)
-            (tile, Core.minMaxLoc(result))
+  def recognize(mat: Mat, templates: Seq[Mat], width: Int, height: Int): Option[(Seq[Int], Seq[Seq[Int]])] =
+    if (width > 0 && height > 0) {
+      val result = crop(resize(mat, MaxResolution)).collect {
+        case (hand, contour) if hand.size.area > 0 =>
+          Imgproc.resize(hand, hand, new Size(hand.size.width * height / hand.size.height, height))
+          val edge = approxPoly(new MatOfPoint2f(contour.toArray: _*)).rows
+          val tiles = if (edge == 4) templates else templates ++ templates.map(m => flip(m.t, 0)) ++ templates.map(m => flip(m.t, 1))
+          @annotation.tailrec
+          def go(rects: List[(Int, Rect)]): List[(Int, Rect)] = {
+            val locs = for (tile <- tiles) yield {
+              val result = new Mat
+              Imgproc.matchTemplate(hand, tile, result, Imgproc.TM_CCORR_NORMED)
+              (tile, Core.minMaxLoc(result))
+            }
+            val ((tile, loc), i) = locs.zipWithIndex.maxBy(_._1._2.maxVal)
+            val rect = new Rect(loc.maxLoc, tile.size)
+            if (rects.forall(pair => !intersects(rect, pair._2))) {
+              Imgproc.rectangle(hand, rect.tl, rect.br, new Scalar(0), -1)
+              go((i % 34, rect) :: rects)
+            } else {
+              rects
+            }
           }
-          val ((tile, loc), i) = locs.zipWithIndex.maxBy(_._1._2.maxVal)
-          val rect = new Rect(loc.maxLoc, tile.size)
-          if (rects.forall(pair => !intersects(rect, pair._2))) {
-            Imgproc.rectangle(hand, rect.tl, rect.br, new Scalar(0), -1)
-            go((i % 34, rect) :: rects)
-          } else {
-            rects
-          }
-        }
-        val indices = go(Nil).sortBy(_._2.x).map(_._1)
-        (edge == 4 && indices.size != 4, indices)
-    }.groupBy(_._1).mapValues(_.map(_._2))
-    (result(true)(0), result.get(false).toList.flatten)
-  }
+          val indices = go(Nil).sortBy(_._2.x).map(_._1)
+          (edge == 4 && indices.size != 4, indices)
+      }.groupBy(_._1).mapValues(_.map(_._2))
+      result(true).headOption.map((_, result.get(false).toList.flatten))
+    } else {
+      None
+    }
 
 }

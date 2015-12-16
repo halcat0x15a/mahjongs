@@ -14,7 +14,7 @@ package object recognizer {
     val ext = if (name.contains("linux")) "so" else if (name.contains("mac")) "dylib" else ""
     val file = getClass.getProtectionDomain.getCodeSource.getLocation.getPath
     val dir = if (file.endsWith(".jar")) file.substring(0, file.lastIndexOf('/')) else file
-    System.load(s"$dir/libopencv_java300.$ext")
+    System.load(s"$dir/lib${Core.NATIVE_LIBRARY_NAME}.$ext")
   }
 
   def findContours(mat: Mat): Buffer[MatOfPoint] = {
