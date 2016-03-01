@@ -101,6 +101,8 @@ var Result = React.createClass({
   render: function() {
     return (
       <div>
+        <div className="panel panel-default">
+          <div className="panel-body">
         <form onChange={this.handleChange}>
           <div className="checkbox">
             <label>
@@ -129,9 +131,13 @@ var Result = React.createClass({
           <label htmlFor="dora">ドラ</label>
           <input ref="dora" className="form-control" type="number" name="dora" defaultValue="0" />
         </form>
-        <div>
-          <p>{this.state.fu}符 {this.state.han}飜 {this.state.point}</p>
-          <ul>{this.state.yaku.map(function (yaku, i) { return <li key={i}>{yaku}</li>; })}</ul>
+          </div>
+        </div>
+        <div className="panel panel-default">
+          <div className="panel-body">
+            <ul className="list-unstyled">{this.state.yaku.map(function (yaku, i) { return (<li key={i}>{yaku}</li>); })}</ul>
+            <p>{this.state.fu}符 {this.state.han}飜 {this.state.point}点</p>
+          </div>
         </div>
       </div>
     );
@@ -163,8 +169,12 @@ var Hand = React.createClass({
   render: function() {
     return (
       <div>
+        <div className="panel panel-default">
+          <div className="panel-body">
         <Form success={this.onSuccess} url="recognize" label="手牌画像" src="hand.jpg" json={this.createJSON} />
         <Preview data={this.previewData()} />
+          </div>
+        </div>
         <Result ref="result" data={this.state} />
       </div>
     );
@@ -189,8 +199,12 @@ var Tile = React.createClass({
   render: function() {
     return (
       <div>
+        <div className="panel panel-default">
+          <div className="panel-body">
         <Form success={this.onSuccess} url="train" label="牌画像" src="tile.jpg" json={this.createJSON} />
         <Preview data={this.previewData()} />
+          </div>
+        </div>
         <Hand data={this.state} />
       </div>
     );

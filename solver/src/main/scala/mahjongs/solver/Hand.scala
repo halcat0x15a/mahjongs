@@ -22,7 +22,7 @@ case class Hand(waiting: Wait, closedMelds: List[Meld], openMelds: List[Meld], s
     else if (isSevenPairs)
       25
     else
-      20 + waiting.fu + melds.map(Meld.fu(_, situation)).sum + situation.fu(isClosed)
+      ceil(20 + waiting.fu + melds.map(Meld.fu(_, situation)).sum + situation.fu(isClosed), 10)
 
   val yaku: Vector[Yaku] =
     Yaku.values.filter(_.isDefinedAt(this))

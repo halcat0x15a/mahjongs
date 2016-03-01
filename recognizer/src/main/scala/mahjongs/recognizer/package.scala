@@ -57,16 +57,18 @@ package object recognizer {
     mat
   }
 
-  def crop(mat: Mat): Buffer[(Mat, MatOfPoint)] = {
+  def minAreaRect(contour: MatOfPoint): RotatedRect =
+    Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray: _*))
+
+  def crop(mat: Mat): Buffer[(Mat, MatOfPoint)] =
     for (contour <- findContours(threshold(mat.clone, false))) yield {
       val patch = new Mat
-      val rect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray: _*))
+      val rect = minAreaRect(contour)
       Imgproc.warpAffine(mat, patch, Imgproc.getRotationMatrix2D(rect.center, rect.angle, 1), mat.size)
       Imgproc.getRectSubPix(patch, rect.size, rect.center, patch)
       if (rect.angle <= -45) Core.flip(patch.t, patch, 0)
       (patch, contour)
     }
-  }
 
   def convexHull(contours: Seq[Point]): Rect = {
     val hull = new MatOfInt
@@ -106,5 +108,10 @@ package object recognizer {
 
   def read(filename: String, gray: Boolean): Mat =
     Imgcodecs.imread(filename, if (gray) Imgcodecs.IMREAD_GRAYSCALE else Imgcodecs.IMREAD_COLOR)
+
+  def log(filename: String, mat: Mat): Unit = {
+    println(filename)
+    Imgcodecs.imwrite(filename, mat)
+  }
 
 }

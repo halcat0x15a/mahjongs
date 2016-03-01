@@ -25,17 +25,14 @@ object Win {
   def calc(basicPoints: Int, situation: Situation): Win =
     if (situation.isSelfDrawn) {
       if (situation.isDealer)
-        DealerTsumo(ceil(basicPoints * 2))
+        DealerTsumo(ceil(basicPoints * 2, 100))
       else
-        NonDealerTsumo(ceil(basicPoints * 2), ceil(basicPoints))
+        NonDealerTsumo(ceil(basicPoints * 2, 100), ceil(basicPoints, 100))
     } else {
       if (situation.isDealer)
-        Ron(ceil(basicPoints * 6))
+        Ron(ceil(basicPoints * 6, 100))
       else
-        Ron(ceil(basicPoints * 4))
+        Ron(ceil(basicPoints * 4, 100))
     }
-
-  def ceil(points: Double): Int =
-    (math.ceil(points / 100) * 100).toInt
 
 }

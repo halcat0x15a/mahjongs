@@ -68,7 +68,7 @@ case object Sanshokudoujun extends Yaku("三色同順") {
   def apply(hand: Hand): Int = if (hand.isClosed) 2 else 1
 
   def isDefinedAt(hand: Hand): Boolean =
-    (1 to 7).exists(n => Suit.values.forall(suit => hand.melds.exists(_.tile == Num(suit, n))))
+    (1 to 7).exists(n => Suit.values.forall(suit => hand.melds.exists(meld => meld.isSeq && meld.tile == Num(suit, n))))
 
 }
 
@@ -122,7 +122,7 @@ case object Sanshokudoukou extends Yaku("三色同刻") {
   def apply(hand: Hand): Int = 2
 
   def isDefinedAt(hand: Hand): Boolean =
-    (1 to 9).exists(n => Suit.values.forall(suit => hand.melds.exists(_.tile == Num(suit, n))))
+    (1 to 9).exists(n => Suit.values.forall(suit => hand.melds.exists(meld => meld.isTriplet && meld.tile == Num(suit, n))))
 
 }
 
